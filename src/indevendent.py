@@ -5,25 +5,27 @@ from PyQt6.QtCore import Qt
 
 class invItemWidget(widgets.QWidget):
 
-    product_types = []
+    categories = ['-']
 
     @classmethod
-    def add_product_type(name):
-        invItemWidget.product_types.append(name)
-        invItemWidget.product_types = invItemWidget.product_types.sorted()
+    def add_category(self, name):
+        invItemWidget.categories.append(name)
+        invItemWidget.categories.sort()
 
     def __init__(self):
         super(invItemWidget, self).__init__()
 
         self.product_name = 'New Product'
-        self.product_category = None
+        self.product_category = '-'
         self.price = 0.0
         self.inv_count = 0
 
         self.name_box = widgets.QLineEdit(self.product_name)
         self.category_box = widgets.QComboBox()
-        self.category_box.addItems(invItemWidget.product_types)
+        self.category_box.addItems(invItemWidget.categories)
+        self.category_box.setFixedWidth(100)
         self.price_box = widgets.QLineEdit(str(self.price))
+        self.price_box.setFixedWidth(50)
 
         self.name_box.editingFinished.connect(self.setName)
         self.price_box.editingFinished.connect(self.setPrice)
@@ -76,6 +78,7 @@ class MainWindow(widgets.QMainWindow):
         self.addItemButton.clicked.connect(self.add_blank_item)
         self.addCategoryBox = widgets.QLineEdit(self, placeholderText = 'Add new category...')
         self.addCategoryButton = widgets.QPushButton('Add')
+        self.addCategoryButton.clicked.connect(self.add_new_category)
 
         self.addingMenuLayout.addWidget(self.addItemButton)
         self.addingMenuLayout.addWidget(self.addCategoryBox)
@@ -85,8 +88,11 @@ class MainWindow(widgets.QMainWindow):
         self.addingDock.setWidget(self.addingMenu)
 
         #spacer = widgets.QSpacerItem(1, 1, widgets.QSizePolicy.Policy.Minimum, widgets.QSizePolicy.Policy.Expanding)
-        #layout.addItem(spacer)
-        #self.controls.setLayout(self.controlsLayout)
+        #self.itemPanelLayout.addItem(spacer)
+        #self.itemPanel.setLayout(self.itemPanelLayout)
+
+        self.itemPanelLayout.addSpacerItem(widgets.QSpacerItem(1,1,widgets.QSizePolicy.Policy.Minimum, widgets.QSizePolicy.Policy.Expanding))
+        self.itemPanel.setLayout(self.itemPanelLayout)
 
         # Scroll Area Properties.
         self.scroller = widgets.QScrollArea()
@@ -119,8 +125,15 @@ class MainWindow(widgets.QMainWindow):
     def add_blank_item(self):
         new_item = invItemWidget()
         self.items.append(new_item)
-        self.itemPanelLayout.addWidget(new_item)
+        self.itemPanelLayout.insertWidget(self.itemPanelLayout.count()-1, new_item)
         self.itemPanel.setLayout(self.itemPanelLayout)
+
+    def add_new_category(self):
+        new_category = self.addCategoryBox.text()
+        if new_category != '':
+            invItemWidget.add_category(new_category)
+            for item in self.items:
+                item.category_box.addItem(new_category)
 
 if __name__ == '__main__':
     app = widgets.QApplication(sys.argv)
