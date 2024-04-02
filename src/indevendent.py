@@ -236,7 +236,7 @@ class MainWindow(widgets.QMainWindow):
         for cat in cat_lists.keys():
             deal = invItemWidget.deals[cat]
             if deal is not None:
-                num_bought = cat.len()
+                num_bought = len(cat)
                 if deal[0] == 'BOGO':
                     times = (num_bought // deal[1]) * deal[2]
                     for i in range(times):
