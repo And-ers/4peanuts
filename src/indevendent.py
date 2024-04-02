@@ -33,6 +33,7 @@ class invItemWidget(widgets.QWidget):
         self.category_box = widgets.QComboBox()
         self.category_box.addItems(invItemWidget.categories)
         self.category_box.setFixedWidth(CATEGORY_WIDTH)
+        self.category_box.setInsertPolicy(widgets.QComboBox.InsertPolicy.InsertAlphabetically)
         self.price_box = widgets.QLineEdit(str(self.price))
         self.price_box.setFixedWidth(PRICE_WIDTH)
         self.amountBox = widgets.QSpinBox()
@@ -44,6 +45,7 @@ class invItemWidget(widgets.QWidget):
         self.sellCountBox.setRange(0,self.inv_count)
         self.sellCountBox.setFixedWidth(SELL_COUNT_WIDTH)
 
+        self.category_box.currentTextChanged.connect(self.updateCategory)
         self.amountBox.editingFinished.connect(self.updateAmount)
         self.name_box.editingFinished.connect(self.setName)
         self.price_box.editingFinished.connect(self.setPrice)
@@ -64,11 +66,11 @@ class invItemWidget(widgets.QWidget):
         self.price = float(self.price_box.text())
 
     def show(self):
-        for w in [self, self.name_box, self.category_box, self.price_box]:
+        for w in [self, self.name_box, self.category_box, self.price_box, self.sellCountBox]:
             w.setVisible(True)
 
     def hide(self):
-        for w in [self, self.name_box, self.category_box, self.price_box]:
+        for w in [self, self.name_box, self.category_box, self.price_box, self.sellCountBox]:
             w.setVisible(False)
     
     def updateAmount(self):
@@ -86,7 +88,25 @@ class invItemWidget(widgets.QWidget):
             'price': self.price,
         }
         return sale, number_sold
+    
+    def updateCategory(self, name):
+        self.product_category = name
 
+class CustomDialog(widgets.QDialog):
+    def __init__(self):
+        super().__init__()
+
+        self.setWindowTitle("Configure deals...")
+
+        self.layout = widgets.QHBoxLayout()
+        self.catDropBox = widgets.QComboBox()
+        self.catDropBox.addItems(invItemWidget.categories)
+
+        self.dealDropBox = widgets.QComboBox()
+        self.dealDropBox.addItems(['BOGO', 'BULK'])
+
+        self.layout.addWidget(self.catDropBox)
+        self.setLayout(self.layout)
 
 class MainWindow(widgets.QMainWindow):
 
@@ -106,9 +126,6 @@ class MainWindow(widgets.QMainWindow):
         self.addingDock.setFeatures(widgets.QDockWidget.DockWidgetFeature.NoDockWidgetFeatures)
         self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.addingDock)
 
-        # create a QLabel widget
-        #testBox = invItemWidget()
-
         self.addingMenu = widgets.QWidget()
         self.addingMenuLayout = widgets.QVBoxLayout()
 
@@ -117,6 +134,7 @@ class MainWindow(widgets.QMainWindow):
         self.addCategoryBox = widgets.QLineEdit(self, placeholderText = 'Add new category...')
         self.addCategoryButton = widgets.QPushButton('Add')
         self.addCategoryButton.clicked.connect(self.add_new_category)
+        self.configureDealsButton = widgets.QPushButton('Configure deals...')
 
         self.addingMenuLayout.addWidget(self.addItemButton)
         self.addingMenuLayout.addWidget(self.addCategoryBox)
@@ -233,6 +251,7 @@ class MainWindow(widgets.QMainWindow):
                         cat.append(deal[2])
                 else:
                     pass
+        sales_price = sum([sum(cat) for cat in cat_lists.values()])
         return sales_price
 
     def sale_update_inventory(self):
