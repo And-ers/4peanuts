@@ -85,7 +85,7 @@ class invItemWidget(widgets.QWidget):
             'category': self.product_category,
             'price': self.price,
         }
-        return sale
+        return sale, number_sold
 
 
 class MainWindow(widgets.QMainWindow):
@@ -209,11 +209,38 @@ class MainWindow(widgets.QMainWindow):
                 item.category_box.addItem(new_category)
         self.addCategoryBox.clear()
 
+    def calculate_sales_price(self, sales):
+        sales_price = 0
+        cat_lists = dict()
+        for cat in invItemWidget.categories:
+            cat_list = [sale['price'] for sale in sales if sales['category'] == cat]
+            cat_list.sort()
+            if not cat_list.isEmpty():
+                cat_lists.update({cat : cat_list})
+        for cat in cat_lists.keys():
+            deal = invItemWidget.deals[cat]
+            if deal is not None:
+                num_bought = cat.len()
+                if deal[0] == 'BOGO':
+                    times = (num_bought // deal[1]) * deal[2]
+                    for i in range(times):
+                        cat.remove(0)
+                elif deal[0] == 'BULK':
+                    times = (num_bought // deal[1])
+                    for i in range(times):
+                        for j in range(deal[1]):
+                            cat.remove(0)
+                        cat.append(deal[2])
+                else:
+                    pass
+        return sales_price
+
     def sale_update_inventory(self):
         sales = []
         for item in self.items:
-            sales.append(item.complete_sale())
-        sale_amount = sum([sale['price'] for sale in sales])
+            sale, num_sold = item.complete_sale()
+            sales += [sale] * num_sold
+        sale_amount = self.calculate_sales_price(sales)
         self.increase_profit(sale_amount)
 
     def increase_profit(self, amount):
