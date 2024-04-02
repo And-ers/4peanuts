@@ -97,6 +97,7 @@ class CustomDialog(widgets.QDialog):
         super().__init__()
 
         self.setWindowTitle("Configure deals...")
+        self.setGeometry(width = 200, height = 100)
 
         self.layout = widgets.QHBoxLayout()
         self.catDropBox = widgets.QComboBox()
@@ -104,6 +105,8 @@ class CustomDialog(widgets.QDialog):
 
         self.dealDropBox = widgets.QComboBox()
         self.dealDropBox.addItems(['BOGO', 'BULK'])
+
+        self.blankSpacer = widgets.QSpacerItem(1,1,widgets.QSizePolicy.Policy.Expanding,widgets.QSizePolicy.Policy.Minimum)
 
         self.layout.addWidget(self.catDropBox)
         self.setLayout(self.layout)
@@ -151,14 +154,9 @@ class MainWindow(widgets.QMainWindow):
         self.addingMenu.setLayout(self.addingMenuLayout)
         self.addingDock.setWidget(self.addingMenu)
 
-        #spacer = widgets.QSpacerItem(1, 1, widgets.QSizePolicy.Policy.Minimum, widgets.QSizePolicy.Policy.Expanding)
-        #self.itemPanelLayout.addItem(spacer)
-        #self.itemPanel.setLayout(self.itemPanelLayout)
-
         self.itemPanelLayout.addSpacerItem(widgets.QSpacerItem(1,1,widgets.QSizePolicy.Policy.Minimum, widgets.QSizePolicy.Policy.Expanding))
         self.itemPanel.setLayout(self.itemPanelLayout)
 
-        # Scroll Area Properties.
         self.scroller = widgets.QScrollArea()
         self.scroller.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
         self.scroller.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
