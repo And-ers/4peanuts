@@ -113,9 +113,31 @@ class CustomDialog(widgets.QDialog):
         self.control_boxes.append(self.blankSpacer)
 
         self.BOGOControls = widgets.QVBoxLayout()
-        self.
+        self.BOGOLabel1 = widgets.QLabel('Buy ')
+        self.BOGOField1 = widgets.QSpinBox()
+        self.BOGOField1.setFixedWidth(30)
+        self.BOGOField1.setButtonSymbols(widgets.QAbstractSpinBox.ButtonSymbols.NoButtons)
+        self.BOGOLabel2 = widgets.QLabel(', get ')
+        self.BOGOField2 = widgets.QSpinBox()
+        self.BOGOField2.setFixedWidth(30)
+        self.BOGOField2.setButtonSymbols(widgets.QAbstractSpinBox.ButtonSymbols.NoButtons)
+
+        self.BOGOControls.addWidget(self.BOGOLabel1)
+        self.BOGOControls.addWidget(self.BOGOField1)
+        self.BOGOControls.addWidget(self.BOGOLabel2)
+        self.BOGOControls.addWidget(self.BOGOField2)
+
+        self.saveDealButton = widgets.QPushButton('Save')
+        self.cancelButton = widgets.QPush
+
+        buttons = widgets.QDialogButtonBox.StandardButton.Save | widgets.QDialogButtonBox.StandardButton.Cancel
+
+        self.buttonBox = widgets.QDialogButtonBox(buttons)
+        self.buttonBox.accepted.connect(self.accept)
+        self.buttonBox.rejected.connect(self.reject)
 
         self.layout.addWidget(self.catDropBox)
+        self.layout.addWidget(self.buttonBox)
         self.setLayout(self.layout)
 
     def show_deal_controls(self):
