@@ -121,11 +121,24 @@ class CustomDialog(widgets.QDialog):
         self.BOGOField2 = widgets.QSpinBox()
         self.BOGOField2.setFixedWidth(30)
         self.BOGOField2.setButtonSymbols(widgets.QAbstractSpinBox.ButtonSymbols.NoButtons)
-
         self.BOGOControls.addWidget(self.BOGOLabel1)
         self.BOGOControls.addWidget(self.BOGOField1)
         self.BOGOControls.addWidget(self.BOGOLabel2)
         self.BOGOControls.addWidget(self.BOGOField2)
+
+        self.BULKControls = widgets.QVBoxLayout()
+        self.BULKLabel1 = widgets.QLabel('Buy ')
+        self.BULKField1 = widgets.QSpinBox()
+        self.BULKField1.setFixedWidth(30)
+        self.BULKField1.setButtonSymbols(widgets.QAbstractSpinBox.ButtonSymbols.NoButtons)
+        self.BULKLabel2 = widgets.QLabel(', get ')
+        self.BULKField2 = widgets.QSpinBox()
+        self.BULKField2.setFixedWidth(30)
+        self.BULKField2.setButtonSymbols(widgets.QAbstractSpinBox.ButtonSymbols.NoButtons)
+        self.BULKControls.addWidget(self.BULKLabel1)
+        self.BULKControls.addWidget(self.BULKField1)
+        self.BULKControls.addWidget(self.BULKLabel2)
+        self.BULKControls.addWidget(self.BULKField2)
 
         self.saveDealButton = widgets.QPushButton('Save')
         self.cancelButton = widgets.QPush
@@ -137,6 +150,9 @@ class CustomDialog(widgets.QDialog):
         self.buttonBox.rejected.connect(self.reject)
 
         self.layout.addWidget(self.catDropBox)
+        self.layout.addWidget(self.blankSpacer)
+        self.layout.addWidget(self.BOGOControls)
+        self.layout.addWidget(self.BULKControls)
         self.layout.addWidget(self.buttonBox)
         self.setLayout(self.layout)
 
