@@ -93,23 +93,42 @@ class invItemWidget(widgets.QWidget):
         self.product_category = name
 
 class CustomDialog(widgets.QDialog):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, parent = None):
+        super().__init__(parent)
 
         self.setWindowTitle("Configure deals...")
         self.setGeometry(width = 200, height = 100)
+
+        self.control_boxes = []
 
         self.layout = widgets.QHBoxLayout()
         self.catDropBox = widgets.QComboBox()
         self.catDropBox.addItems(invItemWidget.categories)
 
         self.dealDropBox = widgets.QComboBox()
-        self.dealDropBox.addItems(['BOGO', 'BULK'])
+        self.dealDropBox.addItems(['-', 'BOGO', 'BULK'])
+        self.dealDropBox.currentTextChanged.connect(self.show_deal_controls)
 
         self.blankSpacer = widgets.QSpacerItem(1,1,widgets.QSizePolicy.Policy.Expanding,widgets.QSizePolicy.Policy.Minimum)
+        self.control_boxes.append(self.blankSpacer)
+
+        self.BOGOControls = widgets.QVBoxLayout()
+        self.
 
         self.layout.addWidget(self.catDropBox)
         self.setLayout(self.layout)
+
+    def show_deal_controls(self):
+        for box in self.control_boxes:
+            box.setHidden(True)
+        selection = self.dealDropBox.currentText
+        if selection == '-':
+            self.blankSpacer.setHidden(False)
+        elif selection == 'BOGO':
+            self.BOGOControls.setHidden(False)
+        elif selection == 'BULK':
+            self.BULKControls.setHidden(False)
+
 
 class MainWindow(widgets.QMainWindow):
 
@@ -138,6 +157,7 @@ class MainWindow(widgets.QMainWindow):
         self.addCategoryButton = widgets.QPushButton('Add')
         self.addCategoryButton.clicked.connect(self.add_new_category)
         self.configureDealsButton = widgets.QPushButton('Configure deals...')
+        self.configureDealsButton.clicked.connect(self.open_deal_dialog)
 
         self.addingMenuLayout.addWidget(self.addItemButton)
         self.addingMenuLayout.addWidget(self.addCategoryBox)
@@ -263,6 +283,9 @@ class MainWindow(widgets.QMainWindow):
     def increase_profit(self, amount):
         self.total_profit += amount
         self.profitLabel.setText(f"Today's Profit: ${self.total_profit:.2f}")
+
+    def open_deal_dialog(self):
+        dlg = CustomDialog(self)
 
 if __name__ == '__main__':
     app = widgets.QApplication(sys.argv)
