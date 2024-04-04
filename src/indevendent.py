@@ -131,7 +131,7 @@ class CustomDialog(widgets.QDialog):
         self.BULKField1 = widgets.QSpinBox()
         self.BULKField1.setFixedWidth(30)
         self.BULKField1.setButtonSymbols(widgets.QAbstractSpinBox.ButtonSymbols.NoButtons)
-        self.BULKLabel2 = widgets.QLabel(', get ')
+        self.BULKLabel2 = widgets.QLabel(' for $')
         self.BULKField2 = widgets.QSpinBox()
         self.BULKField2.setFixedWidth(30)
         self.BULKField2.setButtonSymbols(widgets.QAbstractSpinBox.ButtonSymbols.NoButtons)
@@ -146,7 +146,7 @@ class CustomDialog(widgets.QDialog):
         buttons = widgets.QDialogButtonBox.StandardButton.Save | widgets.QDialogButtonBox.StandardButton.Cancel
 
         self.buttonBox = widgets.QDialogButtonBox(buttons)
-        self.buttonBox.accepted.connect(self.accept)
+        self.buttonBox.accepted.connect(self.saveDeal)
         self.buttonBox.rejected.connect(self.reject)
 
         self.layout.addWidget(self.catDropBox)
@@ -160,12 +160,25 @@ class CustomDialog(widgets.QDialog):
         for box in self.control_boxes:
             box.setHidden(True)
         selection = self.dealDropBox.currentText
-        if selection == '-':
+        if selection == '-' or selection == 'NONE':
             self.blankSpacer.setHidden(False)
         elif selection == 'BOGO':
             self.BOGOControls.setHidden(False)
         elif selection == 'BULK':
             self.BULKControls.setHidden(False)
+
+    def saveDeal(self):
+        category = self.catDropBox.currentText
+        deal = self.dealDropBox.currentText
+        if deal == '-':
+            self.reject
+        elif deal == 'NONE':
+            self.done((category, None))
+        elif deal == 'BOGO':
+            self.done((category, ('BOGO', self.BOGOField1.value, self.BOGOField2.value)))
+        elif deal == 'BULK':
+            self.done((category, ('BULK', self.BULKField1.value, self.BULKField2.value)))
+
 
 
 class MainWindow(widgets.QMainWindow):
