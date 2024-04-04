@@ -97,7 +97,6 @@ class CustomDialog(widgets.QDialog):
         super().__init__(parent)
 
         self.setWindowTitle("Configure deals...")
-        self.setGeometry(width = 200, height = 100)
 
         self.control_boxes = []
 
@@ -215,6 +214,7 @@ class MainWindow(widgets.QMainWindow):
         self.addingMenuLayout.addWidget(self.addCategoryButton)
 
         self.addingMenuLayout.addSpacerItem(widgets.QSpacerItem(1,1,widgets.QSizePolicy.Policy.Minimum, widgets.QSizePolicy.Policy.Expanding))
+        self.addingMenuLayout.addWidget(self.configureDealsButton)
         self.profitLabel = widgets.QLabel("Today's Profit:   $ --.--")
         self.addingMenuLayout.addWidget(self.profitLabel)
 
