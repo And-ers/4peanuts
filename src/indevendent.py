@@ -100,7 +100,9 @@ class CustomDialog(widgets.QDialog):
 
         self.control_boxes = []
 
-        self.layout = widgets.QHBoxLayout()
+        self.overallLayout = widgets.QVBoxLayout()
+        self.inputContainer = widgets.QWidget()
+        self.inputLayout = widgets.QHBoxLayout()
         self.catDropBox = widgets.QComboBox()
         self.catDropBox.addItems(invItemWidget.categories)
 
@@ -149,12 +151,16 @@ class CustomDialog(widgets.QDialog):
         self.buttonBox.accepted.connect(self.saveDeal)
         self.buttonBox.rejected.connect(self.reject)
 
-        self.layout.addWidget(self.catDropBox)
-        self.layout.addSpacerItem(self.blankSpacer)
-        self.layout.addWidget(self.BOGOContainer)
-        self.layout.addWidget(self.BULKContainer)
-        self.layout.addWidget(self.buttonBox)
-        self.setLayout(self.layout)
+        self.inputLayout.addWidget(self.catDropBox)
+        self.inputLayout.addWidget(self.dealDropBox)
+        self.inputLayout.addSpacerItem(self.blankSpacer)
+        self.inputLayout.addWidget(self.BOGOContainer)
+        self.inputLayout.addWidget(self.BULKContainer)
+        self.BOGOContainer.setHidden(True)
+        self.BULKContainer.setHidden(True)
+        self.overallLayout.addwidget(self.inputContainer)
+        self.overallLayout.addwidget(self.buttonBox)
+        self.setLayout(self.overallLayout)
 
     def show_deal_controls(self):
         for box in self.control_boxes:
@@ -170,15 +176,13 @@ class CustomDialog(widgets.QDialog):
     def saveDeal(self):
         category = self.catDropBox.currentText
         deal = self.dealDropBox.currentText
-        if deal == '-':
-            self.done(None)
-        elif deal == 'NONE':
-            self.done((category, None))
+        if deal == 'NONE':
+            invItemWidget.deals.update({category : None})
         elif deal == 'BOGO':
-            self.done((category, ('BOGO', self.BOGOField1.value, self.BOGOField2.value)))
+            invItemWidget.deals.update({category : ('BOGO', self.BOGOField1.value, self.BOGOField2.value)})
         elif deal == 'BULK':
-            self.done((category, ('BULK', self.BULKField1.value, self.BULKField2.value)))
-
+            invItemWidget.deals.update({category : ('BULK', self.BULKField1.value, self.BULKField2.value)})
+        self.accept()
 
 
 class MainWindow(widgets.QMainWindow):
@@ -338,8 +342,8 @@ class MainWindow(widgets.QMainWindow):
 
     def open_deal_dialog(self):
         dlg = CustomDialog(self)
-        if dlg is not None and dlg[0] != '-':
-            invItemWidget.deals.update({dlg[0] : dlg[1]})
+        dlg.exec()
+        
 
 if __name__ == '__main__':
     app = widgets.QApplication(sys.argv)
