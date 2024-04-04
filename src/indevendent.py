@@ -111,7 +111,8 @@ class CustomDialog(widgets.QDialog):
         self.blankSpacer = widgets.QSpacerItem(1,1,widgets.QSizePolicy.Policy.Expanding,widgets.QSizePolicy.Policy.Minimum)
         self.control_boxes.append(self.blankSpacer)
 
-        self.BOGOControls = widgets.QVBoxLayout()
+        self.BOGOContainer = widgets.QWidget()
+        self.BOGOControls = widgets.QHBoxLayout()
         self.BOGOLabel1 = widgets.QLabel('Buy ')
         self.BOGOField1 = widgets.QSpinBox()
         self.BOGOField1.setFixedWidth(30)
@@ -124,8 +125,10 @@ class CustomDialog(widgets.QDialog):
         self.BOGOControls.addWidget(self.BOGOField1)
         self.BOGOControls.addWidget(self.BOGOLabel2)
         self.BOGOControls.addWidget(self.BOGOField2)
+        self.BOGOContainer.setLayout(self.BOGOControls)
 
-        self.BULKControls = widgets.QVBoxLayout()
+        self.BULKContainer = widgets.QWidget()
+        self.BULKControls = widgets.QHBoxLayout()
         self.BULKLabel1 = widgets.QLabel('Buy ')
         self.BULKField1 = widgets.QSpinBox()
         self.BULKField1.setFixedWidth(30)
@@ -138,9 +141,7 @@ class CustomDialog(widgets.QDialog):
         self.BULKControls.addWidget(self.BULKField1)
         self.BULKControls.addWidget(self.BULKLabel2)
         self.BULKControls.addWidget(self.BULKField2)
-
-        self.saveDealButton = widgets.QPushButton('Save')
-        self.cancelButton = widgets.QPush
+        self.BULKContainer.setLayout(self.BULKControls)
 
         buttons = widgets.QDialogButtonBox.StandardButton.Save | widgets.QDialogButtonBox.StandardButton.Cancel
 
@@ -149,9 +150,9 @@ class CustomDialog(widgets.QDialog):
         self.buttonBox.rejected.connect(self.reject)
 
         self.layout.addWidget(self.catDropBox)
-        self.layout.addWidget(self.blankSpacer)
-        self.layout.addWidget(self.BOGOControls)
-        self.layout.addWidget(self.BULKControls)
+        self.layout.addSpacerItem(self.blankSpacer)
+        self.layout.addWidget(self.BOGOContainer)
+        self.layout.addWidget(self.BULKContainer)
         self.layout.addWidget(self.buttonBox)
         self.setLayout(self.layout)
 
@@ -162,15 +163,15 @@ class CustomDialog(widgets.QDialog):
         if selection == '-' or selection == 'NONE':
             self.blankSpacer.setHidden(False)
         elif selection == 'BOGO':
-            self.BOGOControls.setHidden(False)
+            self.BOGOContainer.setHidden(False)
         elif selection == 'BULK':
-            self.BULKControls.setHidden(False)
+            self.BULKContainer.setHidden(False)
 
     def saveDeal(self):
         category = self.catDropBox.currentText
         deal = self.dealDropBox.currentText
         if deal == '-':
-            self.reject
+            self.done(None)
         elif deal == 'NONE':
             self.done((category, None))
         elif deal == 'BOGO':
@@ -337,6 +338,8 @@ class MainWindow(widgets.QMainWindow):
 
     def open_deal_dialog(self):
         dlg = CustomDialog(self)
+        if dlg is not None and dlg[0] != '-':
+            invItemWidget.deals.update({dlg[0] : dlg[1]})
 
 if __name__ == '__main__':
     app = widgets.QApplication(sys.argv)
