@@ -156,8 +156,8 @@ class CustomDialog(widgets.QDialog):
         self.inputLayout.addSpacerItem(self.blankSpacer)
         self.inputLayout.addWidget(self.BOGOContainer)
         self.inputLayout.addWidget(self.BULKContainer)
-        self.BOGOContainer.setHidden(True)
-        self.BULKContainer.setHidden(True)
+        self.BOGOContainer.setVisible(False)
+        self.BULKContainer.setVisible(False)
         self.inputContainer.setLayout(self.inputLayout)
         self.overallLayout.addWidget(self.inputContainer)
         self.overallLayout.addWidget(self.buttonBox)
@@ -165,12 +165,16 @@ class CustomDialog(widgets.QDialog):
 
     def show_deal_controls(self):
         for box in self.control_boxes:
-            box.setHidden(True)
-        selection = self.dealDropBox.currentText
+            box.setVisible(False)
+        selection = self.dealDropBox.currentText()
         if selection == 'BOGO':
-            self.BOGOContainer.setHidden(False)
+            for box in self.control_boxes:
+                box.setVisible(False)
+            self.BOGOContainer.setVisible(True)
         elif selection == 'BULK':
-            self.BULKContainer.setHidden(False)
+            for box in self.control_boxes:
+                box.setVisible(False)
+            self.BULKContainer.setVisible(True)
 
     def saveDeal(self):
         category = self.catDropBox.currentText
