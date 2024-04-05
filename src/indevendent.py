@@ -111,7 +111,6 @@ class CustomDialog(widgets.QDialog):
         self.dealDropBox.currentTextChanged.connect(self.show_deal_controls)
 
         self.blankSpacer = widgets.QSpacerItem(1,1,widgets.QSizePolicy.Policy.Expanding,widgets.QSizePolicy.Policy.Minimum)
-        self.control_boxes.append(self.blankSpacer)
 
         self.BOGOContainer = widgets.QWidget()
         self.BOGOControls = widgets.QHBoxLayout()
@@ -148,6 +147,7 @@ class CustomDialog(widgets.QDialog):
         buttons = widgets.QDialogButtonBox.StandardButton.Save | widgets.QDialogButtonBox.StandardButton.Cancel
 
         self.buttonBox = widgets.QDialogButtonBox(buttons)
+        self.buttonBox.setCenterButtons(True)
         self.buttonBox.accepted.connect(self.saveDeal)
         self.buttonBox.rejected.connect(self.reject)
 
@@ -158,17 +158,16 @@ class CustomDialog(widgets.QDialog):
         self.inputLayout.addWidget(self.BULKContainer)
         self.BOGOContainer.setHidden(True)
         self.BULKContainer.setHidden(True)
-        self.overallLayout.addwidget(self.inputContainer)
-        self.overallLayout.addwidget(self.buttonBox)
+        self.inputContainer.setLayout(self.inputLayout)
+        self.overallLayout.addWidget(self.inputContainer)
+        self.overallLayout.addWidget(self.buttonBox)
         self.setLayout(self.overallLayout)
 
     def show_deal_controls(self):
         for box in self.control_boxes:
             box.setHidden(True)
         selection = self.dealDropBox.currentText
-        if selection == '-' or selection == 'NONE':
-            self.blankSpacer.setHidden(False)
-        elif selection == 'BOGO':
+        if selection == 'BOGO':
             self.BOGOContainer.setHidden(False)
         elif selection == 'BULK':
             self.BULKContainer.setHidden(False)
