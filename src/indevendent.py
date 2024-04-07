@@ -2,6 +2,7 @@ import sys
 import PyQt6.QtWidgets as widgets
 from PyQt6.QtGui import QFont, QIntValidator
 from PyQt6.QtCore import Qt
+from qt_material import apply_stylesheet
 
 CATEGORY_WIDTH = 200
 PRICE_WIDTH = 50
@@ -177,14 +178,16 @@ class CustomDialog(widgets.QDialog):
             self.BULKContainer.setVisible(True)
 
     def saveDeal(self):
-        category = self.catDropBox.currentText
-        deal = self.dealDropBox.currentText
+        category = self.catDropBox.currentText()
+        deal = self.dealDropBox.currentText()
         if deal == 'NONE':
             invItemWidget.deals.update({category : None})
         elif deal == 'BOGO':
-            invItemWidget.deals.update({category : ('BOGO', self.BOGOField1.value, self.BOGOField2.value)})
+            invItemWidget.deals.update({category : ('BOGO', self.BOGOField1.value(), self.BOGOField2.value())})
+            print(invItemWidget.deals)
         elif deal == 'BULK':
-            invItemWidget.deals.update({category : ('BULK', self.BULKField1.value, self.BULKField2.value)})
+            invItemWidget.deals.update({category : ('BULK', self.BULKField1.value(), self.BULKField2.value())})
+            print(invItemWidget.deals)
         self.accept()
 
 
@@ -195,6 +198,8 @@ class MainWindow(widgets.QMainWindow):
 
         self.setWindowTitle('PyQt Inventory Management System')
         self.setGeometry(100, 100, 900, 500)
+
+        self.setStyleSheet("QLineEdit, QComboBox, QSpinBox { color: white }")
 
         self.items = []
         self.total_profit = 0.0
@@ -308,24 +313,24 @@ class MainWindow(widgets.QMainWindow):
         sales_price = 0
         cat_lists = dict()
         for cat in invItemWidget.categories:
-            cat_list = [sale['price'] for sale in sales if sales['category'] == cat]
+            cat_list = [sale['price'] for sale in sales if sale['category'] == cat]
             cat_list.sort()
-            if not cat_list.isEmpty():
+            if cat_list != []:
                 cat_lists.update({cat : cat_list})
         for cat in cat_lists.keys():
             deal = invItemWidget.deals[cat]
             if deal is not None:
                 num_bought = len(cat)
                 if deal[0] == 'BOGO':
-                    times = (num_bought // deal[1]) * deal[2]
+                    times = (num_bought // (deal[1]+deal[2])) * deal[2]
                     for i in range(times):
-                        cat.remove(0)
+                        cat_lists[cat].pop(0)
                 elif deal[0] == 'BULK':
-                    times = (num_bought // deal[1])
+                    times = (num_bought // (deal[1]+deal[2]))
                     for i in range(times):
                         for j in range(deal[1]):
-                            cat.remove(0)
-                        cat.append(deal[2])
+                            cat_lists[cat].pop(0)
+                        cat_lists[cat].append(deal[2])
                 else:
                     pass
         sales_price = sum([sum(cat) for cat in cat_lists.values()])
@@ -353,6 +358,7 @@ if __name__ == '__main__':
 
     # create the main window
     window = MainWindow()
+    apply_stylesheet(app, theme='dark_lightgreen.xml')
 
     # start the event loop
     sys.exit(app.exec())
