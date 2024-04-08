@@ -1,8 +1,10 @@
 import sys
 import PyQt6.QtWidgets as widgets
 from PyQt6.QtGui import QFont, QIntValidator
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, QSize
 from qt_material import apply_stylesheet
+
+# ICONS FROM FUGUE ICONS BY YUSUKE KAMIYAMANE AT https://p.yusukekamiyamane.com/
 
 CATEGORY_WIDTH = 200
 PRICE_WIDTH = 50
@@ -219,6 +221,39 @@ class MainWindow(widgets.QMainWindow):
         self.items = []
         self.total_profit = 0.0
 
+        # File menu toolbar.
+
+        toolbar = widgets.QToolBar("My main toolbar")
+        toolbar.setIconSize(QSize(16, 16))
+        self.addToolBar(toolbar)
+
+        button_action = widgets.QAction(wigets.QIcon("bug.png"), "&Your button", self)
+        button_action.setStatusTip("This is your button")
+        button_action.triggered.connect(self.onMyToolBarButtonClick)
+        button_action.setCheckable(True)
+        toolbar.addAction(button_action)
+
+        toolbar.addSeparator()
+
+        button_action2 = QAction(QIcon("bug.png"), "Your &button2", self)
+        button_action2.setStatusTip("This is your button2")
+        button_action2.triggered.connect(self.onMyToolBarButtonClick)
+        button_action2.setCheckable(True)
+        toolbar.addAction(button_action2)
+
+        toolbar.addWidget(QLabel("Hello"))
+        toolbar.addWidget(QCheckBox())
+
+        self.setStatusBar(QStatusBar(self))
+
+        menu = self.menuBar()
+
+        file_menu = menu.addMenu("&File")
+        file_menu.addAction(button_action)
+        file_menu.addSeparator()
+
+        # Dock for adding and configuring items and deals.
+
         self.addingDock = widgets.QDockWidget('Item Control')
         self.addingDock.setFeatures(widgets.QDockWidget.DockWidgetFeature.NoDockWidgetFeatures)
         self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.addingDock)
@@ -410,6 +445,50 @@ class MainWindow(widgets.QMainWindow):
     def open_deal_dialog(self):
         dlg = CustomDialog(self)
         dlg.exec()
+
+    import sys
+from PyQt6.QtWidgets import QApplication, QMainWindow, QFileDialog, QWidget, QGridLayout,QLineEdit,QPushButton, QLabel
+from pathlib import Path
+
+class MainWindow(QWidget):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.setWindowTitle('PyQt File Dialog')
+        self.setGeometry(100, 100, 400, 100)
+
+        layout = QGridLayout()
+        self.setLayout(layout)
+
+        # file selection
+        file_browse = QPushButton('Browse')
+        file_browse.clicked.connect(self.open_file_dialog)
+        self.filename_edit = QLineEdit()
+
+        layout.addWidget(QLabel('File:'), 0, 0)
+        layout.addWidget(self.filename_edit, 0, 1)
+        layout.addWidget(file_browse, 0 ,2)
+
+      
+        self.show()
+
+
+    def open_file_dialog(self):
+        filename, ok = QFileDialog.getOpenFileName(
+            self,
+            "Select a File", 
+            "D:\\icons\\avatar\\", 
+            "Images (*.png *.jpg)"
+        )
+        if filename:
+            path = Path(filename)
+            self.filename_edit.setText(str(path))
+
+
+if __name__ == '__main__':
+    app = QApplication(sys.argv)
+    window = MainWindow()
+    sys.exit(app.exec())
         
 
 if __name__ == '__main__':
