@@ -23,10 +23,16 @@ class invItemWidget(widgets.QWidget):
         invItemWidget.categories.sort()
         invItemWidget.deals.update({name : None})
 
-    def __init__(self, name = 'New Product', category = '-', price = 0.0, count = 0, parent_window = None):
+    @classmethod
+    def add_source(self, name):
+        invItemWidget.sources.append(name)
+        invItemWidget.sources.sort()
+
+    def __init__(self, name = 'New Product', category = '-', source = '-', price = 0.0, count = 0, parent_window = None):
         super(invItemWidget, self).__init__()
         self.product_name = name
         self.product_category = category
+        self.product_source = source
         self.price = price
         self.inv_count = count
         self.parent_window = parent_window
@@ -52,6 +58,7 @@ class invItemWidget(widgets.QWidget):
         self.sellCountBox.setFixedWidth(SELL_COUNT_WIDTH)
 
         self.category_box.currentTextChanged.connect(self.updateCategory)
+        self.source_box.currentTextChanged.connect(self.updateSource)
         self.amountBox.editingFinished.connect(self.updateAmount)
         self.name_box.editingFinished.connect(self.setName)
         self.price_box.editingFinished.connect(self.setPrice)
@@ -98,6 +105,9 @@ class invItemWidget(widgets.QWidget):
     
     def updateCategory(self, name):
         self.product_category = name
+
+    def updateSource(self, name):
+        self.product_source = name
 
 class CustomDialog(widgets.QDialog):
     def __init__(self, parent = None):
@@ -205,6 +215,7 @@ class MainWindow(widgets.QMainWindow):
 
         self.setStyleSheet("QLineEdit, QComboBox, QSpinBox { color: white }")
 
+        self.sources = {'-': None}
         self.items = []
         self.total_profit = 0.0
 
@@ -321,12 +332,14 @@ class MainWindow(widgets.QMainWindow):
 
         self.show()
 
-    def update_display(self, text):
+    def update_display(self):
         for item in self.items:
-            if text.lower() in item.product_name.lower():
+            item.hide()
+            if self.searchbar.text().lower() in item.product_name.lower() and item.product_source == '-':
                 item.show()
-            else:
-                item.hide()
+            if self.searchbar.text().lower() in item.product_name.lower() and self.sources[item.product_source] is not None:
+                    if self.sources[item.product_source].isChecked():
+                        item.show()
 
     def add_blank_item(self):
         new_item = invItemWidget(parent_window = self)
@@ -348,6 +361,11 @@ class MainWindow(widgets.QMainWindow):
             invItemWidget.add_source(new_source)
             for item in self.items:
                 item.source_box.addItem(new_source)
+            source_check = widgets.QCheckBox(new_source, self)
+            source_check.setChecked(True)
+            source_check.stateChanged.connect(self.update_display)
+            self.sources.update({new_source: source_check})
+            self.sourceScrollLayout.insertWidget(self.sourceScrollLayout.count()-1, source_check)
         self.addSourceBox.clear()
 
     def calculate_sales_price(self, sales):
