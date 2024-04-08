@@ -1,7 +1,7 @@
 import sys
 import PyQt6.QtWidgets as widgets
-from PyQt6.QtGui import QFont, QIntValidator
-from PyQt6.QtCore import Qt, QSize
+from PyQt6.QtGui import QFont, QIntValidator, QIcon, QAction
+from PyQt6.QtCore import Qt, QSize, QObject
 from qt_material import apply_stylesheet
 
 # ICONS FROM FUGUE ICONS BY YUSUKE KAMIYAMANE AT https://p.yusukekamiyamane.com/
@@ -227,24 +227,24 @@ class MainWindow(widgets.QMainWindow):
         toolbar.setIconSize(QSize(16, 16))
         self.addToolBar(toolbar)
 
-        button_action = widgets.QAction(wigets.QIcon("bug.png"), "&Your button", self)
+        button_action = QAction(QIcon("icons/disk.png"), "&Save...", self)
         button_action.setStatusTip("This is your button")
-        button_action.triggered.connect(self.onMyToolBarButtonClick)
+        button_action.triggered.connect(self.save_to_file)
         button_action.setCheckable(True)
         toolbar.addAction(button_action)
 
         toolbar.addSeparator()
 
-        button_action2 = QAction(QIcon("bug.png"), "Your &button2", self)
-        button_action2.setStatusTip("This is your button2")
-        button_action2.triggered.connect(self.onMyToolBarButtonClick)
+        button_action2 = QAction(QIcon("icons/folder-open.png"), "&Open From .txt", self)
+        button_action2.setStatusTip("Open Items From .txt File")
+        button_action2.triggered.connect(self.open_from_file)
         button_action2.setCheckable(True)
         toolbar.addAction(button_action2)
 
         toolbar.addWidget(QLabel("Hello"))
-        toolbar.addWidget(QCheckBox())
+        toolbar.addWidget(widgets.QCheckBox())
 
-        self.setStatusBar(QStatusBar(self))
+        self.setStatusBar(widgets.QStatusBar(self))
 
         menu = self.menuBar()
 
@@ -445,6 +445,12 @@ class MainWindow(widgets.QMainWindow):
     def open_deal_dialog(self):
         dlg = CustomDialog(self)
         dlg.exec()
+    
+    def save_to_file(self):
+        print('Function save_to_file not implemented.')
+
+    def open_from_file(self):
+        print('Function open_from_file not implemented.')
 
     import sys
 from PyQt6.QtWidgets import QApplication, QMainWindow, QFileDialog, QWidget, QGridLayout,QLineEdit,QPushButton, QLabel

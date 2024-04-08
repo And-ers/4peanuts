@@ -1,5 +1,5 @@
 [project]
-name = "indevendent_And-ers"
+name = "4peanuts_And-ers"
 version = "0.1"
 authors = [
   { name="Example Author", email="author@example.com" },
@@ -14,4 +14,4 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/And-ers/indevendent/"
+Homepage = "https://github.com/And-ers/4peanuts/"
