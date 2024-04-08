@@ -1,9 +1,9 @@
 Metadata-Version: 2.1
-Name: indevendent_And-ers
+Name: 4peanuts_And-ers
 Version: 0.1
 Summary: A small example package
 Author-email: Example Author <author@example.com>
-Project-URL: Homepage, https://github.com/And-ers/indevendent/
+Project-URL: Homepage, https://github.com/And-ers/4peanuts/
 Classifier: Programming Language :: Python :: 3
 Classifier: License :: OSI Approved :: GPL-3.0 License
 Classifier: Operating System :: OS Independent
@@ -11,4 +11,4 @@ Requires-Python: >=3.8
 Description-Content-Type: text/markdown
 License-File: LICENSE
 
-# indevendent
+# 4peanuts

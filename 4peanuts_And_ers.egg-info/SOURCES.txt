@@ -1,0 +1,8 @@
+LICENSE
+README.md
+4peanuts.py
+pyproject.toml
+4peanuts_And_ers.egg-info/PKG-INFO
+4peanuts_And_ers.egg-info/SOURCES.txt
+4peanuts_And_ers.egg-info/dependency_links.txt
+4peanuts_And_ers.egg-info/top_level.txt

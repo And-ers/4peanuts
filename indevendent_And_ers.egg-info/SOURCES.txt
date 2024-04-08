@@ -1,8 +1,0 @@
-LICENSE
-README.md
-indevendent.py
-pyproject.toml
-indevendent_And_ers.egg-info/PKG-INFO
-indevendent_And_ers.egg-info/SOURCES.txt
-indevendent_And_ers.egg-info/dependency_links.txt
-indevendent_And_ers.egg-info/top_level.txt
