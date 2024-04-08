@@ -224,26 +224,15 @@ class MainWindow(widgets.QMainWindow):
 
         # File menu toolbar.
 
-        toolbar = widgets.QToolBar("My main toolbar")
-        toolbar.setIconSize(QSize(16, 16))
-        self.addToolBar(toolbar)
-
         button_action = QAction(QIcon("icons/disk.png"), "&Save...", self)
         button_action.setStatusTip("This is your button")
         button_action.triggered.connect(self.save_to_file)
         button_action.setCheckable(True)
-        toolbar.addAction(button_action)
 
-        toolbar.addSeparator()
-
-        button_action2 = QAction(QIcon("icons/folder-open.png"), "&Open From .txt", self)
+        button_action2 = QAction(QIcon("icons/folder-open.png"), "&Open...", self)
         button_action2.setStatusTip("Open Items From .txt File")
         button_action2.triggered.connect(self.open_from_file)
         button_action2.setCheckable(True)
-        toolbar.addAction(button_action2)
-
-        toolbar.addWidget(widgets.QLabel("Hello"))
-        toolbar.addWidget(widgets.QCheckBox())
 
         self.setStatusBar(widgets.QStatusBar(self))
 
@@ -251,6 +240,7 @@ class MainWindow(widgets.QMainWindow):
 
         file_menu = menu.addMenu("&File")
         file_menu.addAction(button_action)
+        file_menu.addAction(button_action2)
         file_menu.addSeparator()
 
         # Dock for adding and configuring items and deals.
