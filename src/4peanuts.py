@@ -3,6 +3,7 @@ import PyQt6.QtWidgets as widgets
 from PyQt6.QtGui import QFont, QIntValidator, QIcon, QAction
 from PyQt6.QtCore import Qt, QSize, QObject
 from qt_material import apply_stylesheet
+import os
 
 # ICONS FROM FUGUE ICONS BY YUSUKE KAMIYAMANE AT https://p.yusukekamiyamane.com/
 
@@ -241,7 +242,7 @@ class MainWindow(widgets.QMainWindow):
         button_action2.setCheckable(True)
         toolbar.addAction(button_action2)
 
-        toolbar.addWidget(QLabel("Hello"))
+        toolbar.addWidget(widgets.QLabel("Hello"))
         toolbar.addWidget(widgets.QCheckBox())
 
         self.setStatusBar(widgets.QStatusBar(self))
@@ -448,55 +449,28 @@ class MainWindow(widgets.QMainWindow):
     
     def save_to_file(self):
         print('Function save_to_file not implemented.')
-
-    def open_from_file(self):
-        print('Function open_from_file not implemented.')
-
-    import sys
-from PyQt6.QtWidgets import QApplication, QMainWindow, QFileDialog, QWidget, QGridLayout,QLineEdit,QPushButton, QLabel
-from pathlib import Path
-
-class MainWindow(QWidget):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        self.setWindowTitle('PyQt File Dialog')
-        self.setGeometry(100, 100, 400, 100)
-
-        layout = QGridLayout()
-        self.setLayout(layout)
-
-        # file selection
-        file_browse = QPushButton('Browse')
-        file_browse.clicked.connect(self.open_file_dialog)
-        self.filename_edit = QLineEdit()
-
-        layout.addWidget(QLabel('File:'), 0, 0)
-        layout.addWidget(self.filename_edit, 0, 1)
-        layout.addWidget(file_browse, 0 ,2)
-
-      
-        self.show()
-
-
-    def open_file_dialog(self):
-        filename, ok = QFileDialog.getOpenFileName(
+        filename, ok = widgets.QFileDialog.getOpenFileName(
             self,
             "Select a File", 
             "D:\\icons\\avatar\\", 
-            "Images (*.png *.jpg)"
+            "Text (*.txt)"
         )
         if filename:
-            path = Path(filename)
+            path = os.Path(filename)
             self.filename_edit.setText(str(path))
 
-
-if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    window = MainWindow()
-    sys.exit(app.exec())
+    def open_from_file(self):
+        print('Function open_from_file not implemented.')
+        filename, ok = widgets.QFileDialog.getOpenFileName(
+            self,
+            "Select a File", 
+            "D:\\icons\\avatar\\", 
+            "Text (*.txt)"
+        )
+        if filename:
+            path = os.Path(filename)
+            self.filename_edit.setText(str(path))
         
-
 if __name__ == '__main__':
     app = widgets.QApplication(sys.argv)
 
