@@ -446,7 +446,7 @@ class MainWindow(widgets.QMainWindow):
             "Text (*.txt)"
         )
         if filename:
-            path = os.Path(filename)
+            path = os.path(filename)
             self.filename_edit.setText(str(path))
 
     def open_from_file(self):
@@ -458,7 +458,7 @@ class MainWindow(widgets.QMainWindow):
             "Text (*.txt)"
         )
         if filename:
-            path = os.Path(filename)
+            path = os.path(filename)
             self.filename_edit.setText(str(path))
         
 if __name__ == '__main__':
