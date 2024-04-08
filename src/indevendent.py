@@ -12,6 +12,7 @@ SELL_COUNT_WIDTH = 50
 class invItemWidget(widgets.QWidget):
 
     categories = ['-']
+    sources = ['-']
     deals = {
         '-' : None
         }
@@ -35,6 +36,10 @@ class invItemWidget(widgets.QWidget):
         self.category_box.addItems(invItemWidget.categories)
         self.category_box.setFixedWidth(CATEGORY_WIDTH)
         self.category_box.setInsertPolicy(widgets.QComboBox.InsertPolicy.InsertAlphabetically)
+        self.source_box = widgets.QComboBox()
+        self.source_box.addItems(invItemWidget.sources)
+        self.source_box.setFixedWidth(CATEGORY_WIDTH)
+        self.source_box.setInsertPolicy(widgets.QComboBox.InsertPolicy.InsertAlphabetically)
         self.price_box = widgets.QLineEdit(str(self.price))
         self.price_box.setFixedWidth(PRICE_WIDTH)
         self.amountBox = widgets.QSpinBox()
@@ -54,6 +59,7 @@ class invItemWidget(widgets.QWidget):
         self.hbox = widgets.QHBoxLayout()
         self.hbox.addWidget(self.name_box)
         self.hbox.addWidget(self.category_box)
+        self.hbox.addWidget(self.source_box)
         self.hbox.addWidget(self.amountBox)
         self.hbox.addWidget(self.price_box)
         self.hbox.addWidget(self.sellCountBox)
@@ -184,10 +190,8 @@ class CustomDialog(widgets.QDialog):
             invItemWidget.deals.update({category : None})
         elif deal == 'BOGO':
             invItemWidget.deals.update({category : ('BOGO', self.BOGOField1.value(), self.BOGOField2.value())})
-            print(invItemWidget.deals)
         elif deal == 'BULK':
             invItemWidget.deals.update({category : ('BULK', self.BULKField1.value(), self.BULKField2.value())})
-            print(invItemWidget.deals)
         self.accept()
 
 
@@ -197,15 +201,12 @@ class MainWindow(widgets.QMainWindow):
         super().__init__(*args, **kwargs)
 
         self.setWindowTitle('PyQt Inventory Management System')
-        self.setGeometry(100, 100, 900, 500)
+        self.setGeometry(100, 100, 1920, 1200)
 
         self.setStyleSheet("QLineEdit, QComboBox, QSpinBox { color: white }")
 
         self.items = []
         self.total_profit = 0.0
-
-        self.itemPanel = widgets.QWidget()
-        self.itemPanelLayout = widgets.QVBoxLayout()
 
         self.addingDock = widgets.QDockWidget('Item Control')
         self.addingDock.setFeatures(widgets.QDockWidget.DockWidgetFeature.NoDockWidgetFeatures)
@@ -225,19 +226,48 @@ class MainWindow(widgets.QMainWindow):
         self.addingMenuLayout.addWidget(self.addItemButton)
         self.addingMenuLayout.addWidget(self.addCategoryBox)
         self.addingMenuLayout.addWidget(self.addCategoryButton)
-
         self.addingMenuLayout.addSpacerItem(widgets.QSpacerItem(1,1,widgets.QSizePolicy.Policy.Minimum, widgets.QSizePolicy.Policy.Expanding))
-        self.addingMenuLayout.addWidget(self.configureDealsButton)
+        
         self.profitLabel = widgets.QLabel("Today's Profit:   $ --.--")
-        self.addingMenuLayout.addWidget(self.profitLabel)
 
         self.sellButton = widgets.QPushButton('Sell')
         self.sellButton.clicked.connect(self.sale_update_inventory)
+        self.addingMenuLayout.addWidget(self.profitLabel)
         self.addingMenuLayout.addWidget(self.sellButton)
+        self.addingMenuLayout.addWidget(self.configureDealsButton)
 
         self.addingMenu.setLayout(self.addingMenuLayout)
         self.addingDock.setWidget(self.addingMenu)
 
+        # Creation of dock that stores features for stock source control.
+
+        self.sourceDock = widgets.QDockWidget('Stock Sources')
+        self.sourceDock.setFeatures(widgets.QDockWidget.DockWidgetFeature.NoDockWidgetFeatures)
+        self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.sourceDock)
+
+        self.sourcePanel = widgets.QWidget()
+        self.sourcePanelLayout = widgets.QVBoxLayout()
+        self.addSourceBox = widgets.QLineEdit(self, placeholderText = 'Add new source...')
+        self.addSourceButton = widgets.QPushButton('Add')
+        self.addSourceButton.clicked.connect(self.add_new_source)
+        self.sourcePanelLayout.addWidget(self.addSourceBox)
+        self.sourcePanelLayout.addWidget(self.addSourceButton)
+
+        self.sourceScroll = widgets.QScrollArea()
+        self.sourceScroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
+        self.sourceScroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.sourceScroll.setWidgetResizable(True)
+        self.sourceScrollLayout = widgets.QVBoxLayout()
+        self.sourceScrollLayout.addSpacerItem(widgets.QSpacerItem(1,1,widgets.QSizePolicy.Policy.Minimum, widgets.QSizePolicy.Policy.Expanding))
+        self.sourceScroll.setLayout(self.sourceScrollLayout)
+        self.sourcePanelLayout.addWidget(self.sourceScroll)
+        self.sourcePanel.setLayout(self.sourcePanelLayout)
+        self.sourceDock.setWidget(self.sourcePanel)
+
+        # Setup of inner item panel.
+
+        self.itemPanel = widgets.QWidget()
+        self.itemPanelLayout = widgets.QVBoxLayout()
         self.itemPanelLayout.addSpacerItem(widgets.QSpacerItem(1,1,widgets.QSizePolicy.Policy.Minimum, widgets.QSizePolicy.Policy.Expanding))
         self.itemPanel.setLayout(self.itemPanelLayout)
 
@@ -261,6 +291,10 @@ class MainWindow(widgets.QMainWindow):
         CAT_LABEL.setFixedWidth(CATEGORY_WIDTH)
         CAT_LABEL.setAlignment(Qt.AlignmentFlag.AlignCenter)
         headersLayout.addWidget(CAT_LABEL)
+        SRC_LABEL = widgets.QLabel('Source')
+        SRC_LABEL.setFixedWidth(CATEGORY_WIDTH)
+        SRC_LABEL.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        headersLayout.addWidget(SRC_LABEL)
         AMT_LABEL = widgets.QLabel('In Stock')
         AMT_LABEL.setFixedWidth(AMOUNT_WIDTH)
         AMT_LABEL.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -288,7 +322,6 @@ class MainWindow(widgets.QMainWindow):
         self.show()
 
     def update_display(self, text):
-
         for item in self.items:
             if text.lower() in item.product_name.lower():
                 item.show()
@@ -309,6 +342,14 @@ class MainWindow(widgets.QMainWindow):
                 item.category_box.addItem(new_category)
         self.addCategoryBox.clear()
 
+    def add_new_source(self):
+        new_source = self.addSourceBox.text()
+        if new_source != '' and new_source not in invItemWidget.sources:
+            invItemWidget.add_source(new_source)
+            for item in self.items:
+                item.source_box.addItem(new_source)
+        self.addSourceBox.clear()
+
     def calculate_sales_price(self, sales):
         sales_price = 0
         cat_lists = dict()
@@ -320,7 +361,7 @@ class MainWindow(widgets.QMainWindow):
         for cat in cat_lists.keys():
             deal = invItemWidget.deals[cat]
             if deal is not None:
-                num_bought = len(cat)
+                num_bought = len(cat_lists[cat])
                 if deal[0] == 'BOGO':
                     times = (num_bought // (deal[1]+deal[2])) * deal[2]
                     for i in range(times):
@@ -358,7 +399,7 @@ if __name__ == '__main__':
 
     # create the main window
     window = MainWindow()
-    apply_stylesheet(app, theme='dark_lightgreen.xml')
+    apply_stylesheet(app, theme='dark_blue.xml')
 
     # start the event loop
     sys.exit(app.exec())
