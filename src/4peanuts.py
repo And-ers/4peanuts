@@ -492,11 +492,9 @@ class MainWindow(widgets.QMainWindow):
                     self.add_new_category(nextline)
                     nextline = f.readline().strip('\n')
                 nextline = f.readline().strip('\n')
-                print(invItemWidget.categories) # DEBUG PRINT
                 while nextline[0] != '$':
                     self.add_new_source(nextline)
                     nextline = f.readline().strip('\n')
-                print(invItemWidget.sources) # DEBUG PRINT
                 nextline = f.readline().strip('\n')
                 while nextline[0] != '$':
                     cat, deal = nextline.split(':')
