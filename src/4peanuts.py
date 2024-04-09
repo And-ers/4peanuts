@@ -4,13 +4,14 @@ from PyQt6.QtGui import QFont, QIntValidator, QIcon, QAction
 from PyQt6.QtCore import Qt, QSize, QObject
 from qt_material import apply_stylesheet
 import os
+from datetime import datetime
 
 # ICONS FROM FUGUE ICONS BY YUSUKE KAMIYAMANE AT https://p.yusukekamiyamane.com/
 
-CATEGORY_WIDTH = 200
-PRICE_WIDTH = 50
-AMOUNT_WIDTH = 50
-SELL_COUNT_WIDTH = 50
+CATEGORY_WIDTH = 150
+PRICE_WIDTH = 80
+AMOUNT_WIDTH = 80
+SELL_COUNT_WIDTH = 80
 
 class invItemWidget(widgets.QWidget):
 
@@ -59,6 +60,7 @@ class invItemWidget(widgets.QWidget):
         self.sellCountBox.setButtonSymbols(widgets.QAbstractSpinBox.ButtonSymbols.PlusMinus)
         self.sellCountBox.setRange(0,self.inv_count)
         self.sellCountBox.setFixedWidth(SELL_COUNT_WIDTH)
+        self.sellCountBox.valueChanged.connect(parent_window.display_sell_price)
 
         self.category_box.currentTextChanged.connect(self.updateCategory)
         self.source_box.currentTextChanged.connect(self.updateSource)
@@ -111,6 +113,9 @@ class invItemWidget(widgets.QWidget):
 
     def updateSource(self, name):
         self.product_source = name
+
+    def __str__(self):
+        return ','.join([self.product_name, self.product_category, self. product_source, self.price, self.inv_count])
 
 class CustomDialog(widgets.QDialog):
     def __init__(self, parent = None):
@@ -225,12 +230,12 @@ class MainWindow(widgets.QMainWindow):
         # File menu toolbar.
 
         button_action = QAction(QIcon("icons/disk.png"), "&Save...", self)
-        button_action.setStatusTip("This is your button")
+        button_action.setStatusTip("Save inventory to .txt file")
         button_action.triggered.connect(self.save_to_file)
         button_action.setCheckable(True)
 
         button_action2 = QAction(QIcon("icons/folder-open.png"), "&Open...", self)
-        button_action2.setStatusTip("Open Items From .txt File")
+        button_action2.setStatusTip("Open items from .txt file")
         button_action2.triggered.connect(self.open_from_file)
         button_action2.setCheckable(True)
 
@@ -253,7 +258,7 @@ class MainWindow(widgets.QMainWindow):
         self.addingMenuLayout = widgets.QVBoxLayout()
 
         self.addItemButton = widgets.QPushButton('New Item')
-        self.addItemButton.clicked.connect(self.add_blank_item)
+        self.addItemButton.clicked.connect(self.add_item)
         self.addCategoryBox = widgets.QLineEdit(self, placeholderText = 'Add new category...')
         self.addCategoryButton = widgets.QPushButton('Add')
         self.addCategoryButton.clicked.connect(self.add_new_category)
@@ -265,10 +270,12 @@ class MainWindow(widgets.QMainWindow):
         self.addingMenuLayout.addWidget(self.addCategoryButton)
         self.addingMenuLayout.addSpacerItem(widgets.QSpacerItem(1,1,widgets.QSizePolicy.Policy.Minimum, widgets.QSizePolicy.Policy.Expanding))
         
+        self.sellPriceLabel = widgets.QLabel("Sales Price:   $ --.--")
         self.profitLabel = widgets.QLabel("Today's Profit:   $ --.--")
 
         self.sellButton = widgets.QPushButton('Sell')
         self.sellButton.clicked.connect(self.sale_update_inventory)
+        self.addingMenuLayout.addWidget(self.sellPriceLabel)
         self.addingMenuLayout.addWidget(self.profitLabel)
         self.addingMenuLayout.addWidget(self.sellButton)
         self.addingMenuLayout.addWidget(self.configureDealsButton)
@@ -367,8 +374,8 @@ class MainWindow(widgets.QMainWindow):
                     if self.sources[item.product_source].isChecked():
                         item.show()
 
-    def add_blank_item(self):
-        new_item = invItemWidget(parent_window = self)
+    def add_item(self, pad, name = 'New Product', category = '-', source = '-', price = 0.0, count = 0, parent_window = None):
+        new_item = invItemWidget(name = name, category = category, source = source, price = price, count = count, parent_window = self)
         self.items.append(new_item)
         self.itemPanelLayout.insertWidget(self.itemPanelLayout.count()-1, new_item)
         self.itemPanel.setLayout(self.itemPanelLayout)
@@ -420,6 +427,17 @@ class MainWindow(widgets.QMainWindow):
                     pass
         sales_price = sum([sum(cat) for cat in cat_lists.values()])
         return sales_price
+    
+    def display_sell_price(self):
+        sales = []
+        for item in self.items:
+            sale = {
+            'category': item.product_category,
+            'price': item.price,
+        }
+            num_sold = item.sellCountBox.value()
+            sales += [sale] * num_sold
+        self.sellPriceLabel.setText(f'Sales Price:   ${self.calculate_sales_price(sales):.2f}')
 
     def sale_update_inventory(self):
         sales = []
@@ -438,28 +456,47 @@ class MainWindow(widgets.QMainWindow):
         dlg.exec()
     
     def save_to_file(self):
-        print('Function save_to_file not implemented.')
-        filename, ok = widgets.QFileDialog.getOpenFileName(
-            self,
-            "Select a File", 
-            "D:\\icons\\avatar\\", 
-            "Text (*.txt)"
-        )
-        if filename:
-            path = os.path(filename)
-            self.filename_edit.setText(str(path))
+        filename = '.\\saves\\4peanuts-' + datetime.strftime("%Y_%m_%d-%H_%M_%S") + '-save'
+        with open(filename, 'w') as f:
+            f.write('$ CATEGORIES\n')
+            f.writelines(invItemWidget.categories)
+            f.write('$ SOURCES\n')
+            f.writelines(invItemWidget.sources)
+            f.write('$ DEALS\n')
+            f.writelines([deal + ':' + invItemWidget.deals[deal] for deal in invItemWidget.deals.keys()])
+            f.write('$ ITEMS\n')
+            f.writelines([str(item) for item in MainWindow.items])
+            
 
     def open_from_file(self):
         print('Function open_from_file not implemented.')
         filename, ok = widgets.QFileDialog.getOpenFileName(
             self,
             "Select a File", 
-            "D:\\icons\\avatar\\", 
+            ".\\saves\\", 
             "Text (*.txt)"
         )
         if filename:
-            path = os.path(filename)
-            self.filename_edit.setText(str(path))
+            with open(self.filename, 'r') as f:
+                f.readline()
+                nextline = f.readline()
+                while nextline[0] != '$':
+                    invItemWidget.categories.append(nextline)
+                    nextline = f.readline()
+                nextline = f.readline()
+                while nextline[0] != '$':
+                    invItemWidget.sources.append(nextline)
+                    nextline = f.readline()
+                nextline = f.readline()
+                while nextline[0] != '$':
+                    cat, deal = nextline.split(':')
+                    invItemWidget.deals.update({cat: deal})
+                    nextline = f.readline()
+                nextline = f.readline()
+                while nextline[0] is not None:
+                    name, category, source, price, count = nextline.split(',')
+                    self.add_item(name = name, category = category, source = source, price = price, count = count, parent_window = self)
+                    nextline = f.readline()
         
 if __name__ == '__main__':
     app = widgets.QApplication(sys.argv)
