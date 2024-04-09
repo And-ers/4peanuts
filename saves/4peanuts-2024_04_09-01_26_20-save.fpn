@@ -1,0 +1,11 @@
+$ CATEGORIES
+Creature
+Creaturette
+$ SOURCES
+Grand Falls
+SJ
+$ DEALS
+$ ITEMS
+Roxie,Creaturette,SJ,999.99,1
+Chewie,Creature,Grand Falls,0.5,1
+Laddie,Creature,Grand Falls,100.0,2

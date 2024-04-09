@@ -115,7 +115,7 @@ class invItemWidget(widgets.QWidget):
         self.product_source = name
 
     def __str__(self):
-        return ','.join([self.product_name, self.product_category, self. product_source, self.price, self.inv_count])
+        return ','.join([self.product_name, self.product_category, self. product_source, str(self.price), str(self.inv_count)])
 
 class CustomDialog(widgets.QDialog):
     def __init__(self, parent = None):
@@ -374,7 +374,7 @@ class MainWindow(widgets.QMainWindow):
                     if self.sources[item.product_source].isChecked():
                         item.show()
 
-    def add_item(self, pad, name = 'New Product', category = '-', source = '-', price = 0.0, count = 0, parent_window = None):
+    def add_item(self, pad = None, name = 'New Product', category = '-', source = '-', price = 0.0, count = 0, parent_window = None):
         new_item = invItemWidget(name = name, category = category, source = source, price = price, count = count, parent_window = self)
         self.items.append(new_item)
         self.itemPanelLayout.insertWidget(self.itemPanelLayout.count()-1, new_item)
@@ -456,16 +456,16 @@ class MainWindow(widgets.QMainWindow):
         dlg.exec()
     
     def save_to_file(self):
-        filename = '.\\saves\\4peanuts-' + datetime.strftime("%Y_%m_%d-%H_%M_%S") + '-save'
-        with open(filename, 'w') as f:
+        filename = './saves/4peanuts-' + datetime.now().strftime("%Y_%m_%d-%H_%M_%S") + '-save.fpn'
+        with open(filename, 'w+') as f:
             f.write('$ CATEGORIES\n')
-            f.writelines(invItemWidget.categories)
+            f.writelines([cat + '\n' for cat in invItemWidget.categories if cat != '-'])
             f.write('$ SOURCES\n')
-            f.writelines(invItemWidget.sources)
+            f.writelines([src + '\n' for src in invItemWidget.sources if src != '-'])
             f.write('$ DEALS\n')
-            f.writelines([deal + ':' + invItemWidget.deals[deal] for deal in invItemWidget.deals.keys()])
+            f.writelines([deal + ':' + invItemWidget.deals[deal] + '\n' for deal in invItemWidget.deals.keys() if invItemWidget.deals[deal] is not None])
             f.write('$ ITEMS\n')
-            f.writelines([str(item) for item in MainWindow.items])
+            f.writelines([str(item) + '\n' for item in self.items])
             
 
     def open_from_file(self):
@@ -474,10 +474,10 @@ class MainWindow(widgets.QMainWindow):
             self,
             "Select a File", 
             ".\\saves\\", 
-            "Text (*.txt)"
+            "4Peanuts (*.fpn)"
         )
         if filename:
-            with open(self.filename, 'r') as f:
+            with open(filename, 'r') as f:
                 f.readline()
                 nextline = f.readline()
                 while nextline[0] != '$':
@@ -493,9 +493,9 @@ class MainWindow(widgets.QMainWindow):
                     invItemWidget.deals.update({cat: deal})
                     nextline = f.readline()
                 nextline = f.readline()
-                while nextline[0] is not None:
+                while nextline != '':
                     name, category, source, price, count = nextline.split(',')
-                    self.add_item(name = name, category = category, source = source, price = price, count = count, parent_window = self)
+                    self.add_item(name = name, category = category, source = source, price = float(price), count = int(count), parent_window = self)
                     nextline = f.readline()
         
 if __name__ == '__main__':
