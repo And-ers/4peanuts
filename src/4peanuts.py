@@ -46,10 +46,12 @@ class invItemWidget(widgets.QWidget):
         self.category_box.addItems(invItemWidget.categories)
         self.category_box.setFixedWidth(CATEGORY_WIDTH)
         self.category_box.setInsertPolicy(widgets.QComboBox.InsertPolicy.InsertAlphabetically)
+        self.category_box.setCurrentIndex([self.category_box.itemText(i) for i in range(self.category_box.count())].index(self.product_category))
         self.source_box = widgets.QComboBox()
         self.source_box.addItems(invItemWidget.sources)
         self.source_box.setFixedWidth(CATEGORY_WIDTH)
         self.source_box.setInsertPolicy(widgets.QComboBox.InsertPolicy.InsertAlphabetically)
+        self.source_box.setCurrentIndex([self.source_box.itemText(i) for i in range(self.source_box.count())].index(self.product_source))
         self.price_box = widgets.QLineEdit(str(self.price))
         self.price_box.setFixedWidth(PRICE_WIDTH)
         self.amountBox = widgets.QSpinBox()
@@ -380,16 +382,22 @@ class MainWindow(widgets.QMainWindow):
         self.itemPanelLayout.insertWidget(self.itemPanelLayout.count()-1, new_item)
         self.itemPanel.setLayout(self.itemPanelLayout)
 
-    def add_new_category(self):
-        new_category = self.addCategoryBox.text()
+    def add_new_category(self, name = None):
+        if isinstance(name, str):
+            new_category = name
+        else:
+            new_category = self.addCategoryBox.text()
         if new_category != '' and new_category not in invItemWidget.categories:
             invItemWidget.add_category(new_category)
             for item in self.items:
                 item.category_box.addItem(new_category)
         self.addCategoryBox.clear()
 
-    def add_new_source(self):
-        new_source = self.addSourceBox.text()
+    def add_new_source(self, name = None):
+        if isinstance(name, str):
+            new_source = name
+        else:
+            new_source = self.addSourceBox.text()
         if new_source != '' and new_source not in invItemWidget.sources:
             invItemWidget.add_source(new_source)
             for item in self.items:
@@ -479,24 +487,26 @@ class MainWindow(widgets.QMainWindow):
         if filename:
             with open(filename, 'r') as f:
                 f.readline()
-                nextline = f.readline()
+                nextline = f.readline().strip('\n')
                 while nextline[0] != '$':
-                    invItemWidget.categories.append(nextline)
-                    nextline = f.readline()
-                nextline = f.readline()
+                    self.add_new_category(nextline)
+                    nextline = f.readline().strip('\n')
+                nextline = f.readline().strip('\n')
+                print(invItemWidget.categories) # DEBUG PRINT
                 while nextline[0] != '$':
-                    invItemWidget.sources.append(nextline)
-                    nextline = f.readline()
-                nextline = f.readline()
+                    self.add_new_source(nextline)
+                    nextline = f.readline().strip('\n')
+                print(invItemWidget.sources) # DEBUG PRINT
+                nextline = f.readline().strip('\n')
                 while nextline[0] != '$':
                     cat, deal = nextline.split(':')
                     invItemWidget.deals.update({cat: deal})
-                    nextline = f.readline()
-                nextline = f.readline()
+                    nextline = f.readline().strip('\n')
+                nextline = f.readline().strip('\n')
                 while nextline != '':
                     name, category, source, price, count = nextline.split(',')
                     self.add_item(name = name, category = category, source = source, price = float(price), count = int(count), parent_window = self)
-                    nextline = f.readline()
+                    nextline = f.readline().strip('\n')
         
 if __name__ == '__main__':
     app = widgets.QApplication(sys.argv)
