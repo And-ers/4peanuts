@@ -464,7 +464,7 @@ class MainWindow(widgets.QMainWindow):
         dlg.exec()
     
     def save_to_file(self):
-        filename = './saves/4peanuts-' + datetime.now().strftime("%Y_%m_%d-%H_%M_%S") + '-save.fpn'
+        filename, ok = widgets.QFileDialog.getSaveFileName(self,"Save File","","4Peanuts (*.fpn)")
         with open(filename, 'w+') as f:
             f.write('$ CATEGORIES\n')
             f.writelines([cat + '\n' for cat in invItemWidget.categories if cat != '-'])
@@ -477,7 +477,6 @@ class MainWindow(widgets.QMainWindow):
             
 
     def open_from_file(self):
-        print('Function open_from_file not implemented.')
         filename, ok = widgets.QFileDialog.getOpenFileName(
             self,
             "Select a File", 
