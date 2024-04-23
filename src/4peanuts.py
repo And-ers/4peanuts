@@ -449,11 +449,17 @@ class MainWindow(widgets.QMainWindow):
 
     def sale_update_inventory(self):
         sales = []
+        sale_stat_info = []
         for item in self.items:
             sale, num_sold = item.complete_sale()
             sales += [sale] * num_sold
+            sale_copy = sale.copy()
+            sale_copy.update({'item' : item.product_name})
+            sale_stat_info += [sale_copy]
         sale_amount = self.calculate_sales_price(sales)
         self.increase_profit(sale_amount)
+        self.update_lifetime_stats(sales)
+        self.update_daily_stats(sales)
 
     def increase_profit(self, amount):
         self.total_profit += amount
@@ -504,6 +510,17 @@ class MainWindow(widgets.QMainWindow):
                     name, category, source, price, count = nextline.split(',')
                     self.add_item(name = name, category = category, source = source, price = float(price), count = int(count), parent_window = self)
                     nextline = f.readline().strip('\n')
+
+    def update_lifetime_stats(self):
+        with open('./logs/lifetime-logs', 'a+') as f:
+            file_data = f.readlines()
+        return
+    
+    def update_daily_stats(self):
+        log_name = './logs/daily-log-' + str(datetime.datetime.now().date())
+        with open(log_name, 'a+') as f:
+            file_data = f.readlines()
+        return
         
 if __name__ == '__main__':
     app = widgets.QApplication(sys.argv)
