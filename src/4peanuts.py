@@ -449,17 +449,17 @@ class MainWindow(widgets.QMainWindow):
 
     def sale_update_inventory(self):
         sales = []
-        sale_stat_info = []
+        sales_stat_info = []
         for item in self.items:
             sale, num_sold = item.complete_sale()
             sales += [sale] * num_sold
             sale_copy = sale.copy()
             sale_copy.update({'item' : item.product_name})
-            sale_stat_info += [sale_copy]
+            sales_stat_info += [sale_copy]
         sale_amount = self.calculate_sales_price(sales)
         self.increase_profit(sale_amount)
-        self.update_lifetime_stats(sales)
-        self.update_daily_stats(sales)
+        self.update_lifetime_stats(sales_stat_info)
+        self.update_daily_stats(sales_stat_info)
 
     def increase_profit(self, amount):
         self.total_profit += amount
@@ -511,15 +511,26 @@ class MainWindow(widgets.QMainWindow):
                     self.add_item(name = name, category = category, source = source, price = float(price), count = int(count), parent_window = self)
                     nextline = f.readline().strip('\n')
 
-    def update_lifetime_stats(self):
+    def update_lifetime_stats(self, sales):
         with open('./logs/lifetime-logs', 'a+') as f:
-            file_data = f.readlines()
+            item_tags, lifetime_sales = [tuple(line.split('#')) for line in f.readlines()]
+            for sale in sales:
+                item_tag = '[' + sale['category'] + '] ' + sale['name']
+                if item_tag in item_tags:
+                    lifetime_sales[item_tags.index(item_tag)] = str(int(lifetime_sales[item_tags.index(item_tag)]) + 1)
+                else:
+                    item_tags.append(item_tag)
+                    lifetime_sales.append('1')
+            for ind in range(len(item_tags)):
+                f.write(item_tags[ind] + '#' + lifetime_sales[ind] + '\n')
         return
     
-    def update_daily_stats(self):
+    def update_daily_stats(self, sales):
         log_name = './logs/daily-log-' + str(datetime.datetime.now().date())
         with open(log_name, 'a+') as f:
-            file_data = f.readlines()
+            sale_time = str(datetime.now().time()).split('.')[0]
+            for sale in sales:
+                f.write(sale['item'], sale['category'], sale['price'], sale_time, sep=';', end='\n')
         return
         
 if __name__ == '__main__':
