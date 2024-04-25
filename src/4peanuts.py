@@ -541,7 +541,7 @@ class MainWindow(widgets.QMainWindow):
             sales += [sale] * num_sold
             sale_copy = sale.copy()
             sale_copy.update({'item' : item.product_name})
-            sales_stat_info += [sale_copy]
+            sales_stat_info += [sale_copy] * num_sold
         sale_amount = self.calculate_sales_price(sales)
         self.increase_profit(sale_amount)
         self.update_lifetime_stats(sales_stat_info)
@@ -598,12 +598,16 @@ class MainWindow(widgets.QMainWindow):
                     nextline = f.readline().strip('\n')
 
     def update_lifetime_stats(self, sales):
-        with open('./logs/lifetime-logs', 'a+') as f:
+        if not os.path.exists('./logs/lifetime-logs'):
+            open('./logs/lifetime-logs', 'x')
+        with open('./logs/lifetime-logs', 'r') as f:
             data_lines = f.readlines()
             if not data_lines:
                 item_tags, lifetime_sales = [], []
             else:
-                item_tags, lifetime_sales = [line.split('#')[0] for line in data_lines], [line.split('#')[1] for line in data_lines]
+                item_tags, lifetime_sales = [line.split('#')[0].strip() for line in data_lines], [line.split('#')[1].strip() for line in data_lines]
+                print(item_tags)
+                print(lifetime_sales)
             for sale in sales:
                 item_tag = '[' + sale['category'] + '] ' + sale['item']
                 if item_tag in item_tags:
@@ -611,8 +615,11 @@ class MainWindow(widgets.QMainWindow):
                 else:
                     item_tags.append(item_tag)
                     lifetime_sales.append('1')
+            print(item_tags)
+            print(lifetime_sales)
+        with open('./logs/lifetime-logs', 'w') as f:
             for ind in range(len(item_tags)):
-                f.write(item_tags[ind] + '#' + lifetime_sales[ind] + '\n')
+                f.write(item_tags[ind] + ' #' + lifetime_sales[ind] + '\n')
         return
     
     def update_daily_stats(self, sales):
@@ -620,7 +627,7 @@ class MainWindow(widgets.QMainWindow):
         with open(log_name, 'a+') as f:
             sale_time = str(datetime.now().time()).split('.')[0]
             for sale in sales:
-                f.write(sale['item'] + ';' + sale['category'] + ';' + f'{sale['price']: .2f}' + ';' + sale_time + '\n')
+                f.write(sale['item'] + ';' + sale['category'] + ';' + f'{sale['price']:.2f}' + ';' + sale_time + '\n')
         return
     
     def changeEvent(self, event):
