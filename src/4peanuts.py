@@ -219,6 +219,10 @@ class CustomDialog(widgets.QDialog):
 class CustomTitleBar(widgets.QWidget):
     def __init__(self, parent):
         super().__init__(parent)
+        
+        self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
+        self.setAutoFillBackground(True)
+        self.setStyleSheet('background-color: rgb(35,38,41);')
         self.initial_pos = None
         title_bar_layout = widgets.QHBoxLayout(self)
         title_bar_layout.setContentsMargins(1, 1, 1, 1)
@@ -293,6 +297,7 @@ class MainWindow(widgets.QMainWindow):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.initial_pos = None
 
         self.setWindowTitle('PyQt Inventory Management System')
         self.resize(1280, 800)
@@ -611,11 +616,11 @@ class MainWindow(widgets.QMainWindow):
         return
     
     def update_daily_stats(self, sales):
-        log_name = './logs/daily-log-' + str(datetime.datetime.now().date())
+        log_name = './logs/daily-log-' + str(datetime.now().date())
         with open(log_name, 'a+') as f:
             sale_time = str(datetime.now().time()).split('.')[0]
             for sale in sales:
-                f.write(sale['item'], sale['category'], sale['price'], sale_time, sep=';', end='\n')
+                f.write(sale['item'] + ';' + sale['category'] + ';' + f'{sale['price']: .2f}' + ';' + sale_time + '\n')
         return
     
     def changeEvent(self, event):
