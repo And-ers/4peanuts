@@ -1,7 +1,7 @@
 import sys
 import PyQt6.QtWidgets as widgets
 from PyQt6.QtGui import QFont, QIntValidator, QIcon, QAction
-from PyQt6.QtCore import Qt, QSize, QObject
+from PyQt6.QtCore import Qt, QSize, QObject, QEvent
 from qt_material import apply_stylesheet
 import os
 from datetime import datetime
@@ -58,6 +58,7 @@ class invItemWidget(widgets.QWidget):
         self.amountBox.setButtonSymbols(widgets.QAbstractSpinBox.ButtonSymbols.NoButtons)
         self.amountBox.setRange(0,999)
         self.amountBox.setFixedWidth(AMOUNT_WIDTH)
+        self.amountBox.setValue(self.inv_count)
         self.sellCountBox = widgets.QSpinBox()
         self.sellCountBox.setButtonSymbols(widgets.QAbstractSpinBox.ButtonSymbols.PlusMinus)
         self.sellCountBox.setRange(0,self.inv_count)
@@ -214,6 +215,78 @@ class CustomDialog(widgets.QDialog):
             invItemWidget.deals.update({category : ('BULK', self.BULKField1.value(), self.BULKField2.value())})
         self.accept()
 
+class CustomTitleBar(widgets.QWidget):
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.initial_pos = None
+        title_bar_layout = widgets.QHBoxLayout(self)
+        title_bar_layout.setContentsMargins(1, 1, 1, 1)
+        title_bar_layout.setSpacing(2)
+        self.title = widgets.QLabel(f"{self.__class__.__name__}", self)
+        self.title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.title.setStyleSheet(
+            """
+        QLabel { text-transform: uppercase; font-size: 10pt; margin-left: 48px; }
+        """
+        )
+
+        if title := parent.windowTitle():
+            self.title.setText(title)
+        title_bar_layout.addWidget(self.title)
+        # Min button
+        self.min_button = widgets.QToolButton(self)
+        min_icon = QIcon()
+        min_icon.addFile(".\\icons\\min.svg")
+        self.min_button.setIcon(min_icon)
+        self.min_button.clicked.connect(self.window().showMinimized)
+
+        # Max button
+        self.max_button = widgets.QToolButton(self)
+        max_icon = QIcon()
+        max_icon.addFile(".\\icons\\max.svg")
+        self.max_button.setIcon(max_icon)
+        self.max_button.clicked.connect(self.window().showMaximized)
+
+        # Close button
+        self.close_button = widgets.QToolButton(self)
+        close_icon = QIcon()
+        close_icon.addFile(".\\icons\\close.svg")  # Close has only a single state.
+        self.close_button.setIcon(close_icon)
+        self.close_button.clicked.connect(self.window().close)
+
+        # Normal button
+        self.normal_button = widgets.QToolButton(self)
+        normal_icon = QIcon()
+        normal_icon.addFile(".\\icons\\normal.svg")
+        self.normal_button.setIcon(normal_icon)
+        self.normal_button.clicked.connect(self.window().showNormal)
+        self.normal_button.setVisible(False)
+        # Add buttons
+        buttons = [
+            self.min_button,
+            self.normal_button,
+            self.max_button,
+            self.close_button,
+        ]
+        for button in buttons:
+            button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+            button.setFixedSize(QSize(16, 16))
+            button.setStyleSheet(
+                """QToolButton {
+                    border: none;
+                    padding: 2px;
+                }
+                """
+            )
+            title_bar_layout.addWidget(button)
+
+    def window_state_changed(self, state):
+        if state == Qt.WindowState.WindowMaximized:
+            self.normal_button.setVisible(True)
+            self.max_button.setVisible(False)
+        else:
+            self.normal_button.setVisible(False)
+            self.max_button.setVisible(True)
 
 class MainWindow(widgets.QMainWindow):
 
@@ -224,6 +297,8 @@ class MainWindow(widgets.QMainWindow):
         self.setGeometry(100, 100, 1920, 1200)
 
         self.setStyleSheet("QLineEdit, QComboBox, QSpinBox { color: white }")
+
+        self.title_bar = CustomTitleBar(self)
 
         self.sources = {'-': None}
         self.items = []
@@ -358,6 +433,8 @@ class MainWindow(widgets.QMainWindow):
 
         container = widgets.QWidget()
         containerLayout = widgets.QVBoxLayout()
+        self.title_bar = CustomTitleBar(self)
+        containerLayout.addWidget(self.title_bar)
         containerLayout.addWidget(self.searchbar)
         containerLayout.addWidget(headers)
         containerLayout.addWidget(self.scroller)
@@ -513,9 +590,13 @@ class MainWindow(widgets.QMainWindow):
 
     def update_lifetime_stats(self, sales):
         with open('./logs/lifetime-logs', 'a+') as f:
-            item_tags, lifetime_sales = [tuple(line.split('#')) for line in f.readlines()]
+            data_lines = f.readlines()
+            if not data_lines:
+                item_tags, lifetime_sales = [], []
+            else:
+                item_tags, lifetime_sales = [line.split('#')[0] for line in data_lines], [line.split('#')[1] for line in data_lines]
             for sale in sales:
-                item_tag = '[' + sale['category'] + '] ' + sale['name']
+                item_tag = '[' + sale['category'] + '] ' + sale['item']
                 if item_tag in item_tags:
                     lifetime_sales[item_tags.index(item_tag)] = str(int(lifetime_sales[item_tags.index(item_tag)]) + 1)
                 else:
@@ -532,6 +613,37 @@ class MainWindow(widgets.QMainWindow):
             for sale in sales:
                 f.write(sale['item'], sale['category'], sale['price'], sale_time, sep=';', end='\n')
         return
+    
+    def changeEvent(self, event):
+        if event.type() == QEvent.Type.WindowStateChange:
+            self.title_bar.window_state_changed(self.windowState())
+        super().changeEvent(event)
+        event.accept()
+
+    def window_state_changed(self, state):
+        self.normal_button.setVisible(state == Qt.WindowState.WindowMaximized)
+        self.max_button.setVisible(state != Qt.WindowState.WindowMaximized)
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.MouseButton.LeftButton:
+            self.initial_pos = event.position().toPoint()
+        super().mousePressEvent(event)
+        event.accept()
+
+    def mouseMoveEvent(self, event):
+        if self.initial_pos is not None:
+            delta = event.position().toPoint() - self.initial_pos
+            self.window().move(
+                self.window().x() + delta.x(),
+                self.window().y() + delta.y(),
+            )
+        super().mouseMoveEvent(event)
+        event.accept()
+
+    def mouseReleaseEvent(self, event):
+        self.initial_pos = None
+        super().mouseReleaseEvent(event)
+        event.accept()
         
 if __name__ == '__main__':
     app = widgets.QApplication(sys.argv)
