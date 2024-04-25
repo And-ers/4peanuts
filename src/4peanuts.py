@@ -1,12 +1,13 @@
 import sys
 import PyQt6.QtWidgets as widgets
-from PyQt6.QtGui import QFont, QIntValidator, QIcon, QAction
+from PyQt6.QtGui import QFont, QIntValidator, QIcon, QAction, QPalette
 from PyQt6.QtCore import Qt, QSize, QObject, QEvent
 from qt_material import apply_stylesheet
 import os
 from datetime import datetime
 
-# ICONS FROM FUGUE ICONS BY YUSUKE KAMIYAMANE AT https://p.yusukekamiyamane.com/
+# .png ICONS FROM FUGUE ICONS BY YUSUKE KAMIYAMANE AT https://p.yusukekamiyamane.com/
+# .svg ICONS FROM PYTHONGUIS.COM AT https://www.pythonguis.com/tutorials/custom-title-bar-pyqt6/
 
 CATEGORY_WIDTH = 150
 PRICE_WIDTH = 80
@@ -226,7 +227,7 @@ class CustomTitleBar(widgets.QWidget):
         self.title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.title.setStyleSheet(
             """
-        QLabel { text-transform: uppercase; font-size: 10pt; margin-left: 48px; }
+        QLabel { text-transform: uppercase; font-size: 12pt; margin-left: 48px; }
         """
         )
 
@@ -270,7 +271,7 @@ class CustomTitleBar(widgets.QWidget):
         ]
         for button in buttons:
             button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-            button.setFixedSize(QSize(16, 16))
+            button.setFixedSize(QSize(24, 24))
             button.setStyleSheet(
                 """QToolButton {
                     border: none;
@@ -294,8 +295,8 @@ class MainWindow(widgets.QMainWindow):
         super().__init__(*args, **kwargs)
 
         self.setWindowTitle('PyQt Inventory Management System')
-        self.setGeometry(100, 100, 1920, 1200)
-
+        self.resize(1280, 800)
+        self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
         self.setStyleSheet("QLineEdit, QComboBox, QSpinBox { color: white }")
 
         self.title_bar = CustomTitleBar(self)
@@ -318,18 +319,7 @@ class MainWindow(widgets.QMainWindow):
 
         self.setStatusBar(widgets.QStatusBar(self))
 
-        menu = self.menuBar()
-
-        file_menu = menu.addMenu("&File")
-        file_menu.addAction(button_action)
-        file_menu.addAction(button_action2)
-        file_menu.addSeparator()
-
         # Dock for adding and configuring items and deals.
-
-        self.addingDock = widgets.QDockWidget('Item Control')
-        self.addingDock.setFeatures(widgets.QDockWidget.DockWidgetFeature.NoDockWidgetFeatures)
-        self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.addingDock)
 
         self.addingMenu = widgets.QWidget()
         self.addingMenuLayout = widgets.QVBoxLayout()
@@ -358,13 +348,8 @@ class MainWindow(widgets.QMainWindow):
         self.addingMenuLayout.addWidget(self.configureDealsButton)
 
         self.addingMenu.setLayout(self.addingMenuLayout)
-        self.addingDock.setWidget(self.addingMenu)
 
         # Creation of dock that stores features for stock source control.
-
-        self.sourceDock = widgets.QDockWidget('Stock Sources')
-        self.sourceDock.setFeatures(widgets.QDockWidget.DockWidgetFeature.NoDockWidgetFeatures)
-        self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.sourceDock)
 
         self.sourcePanel = widgets.QWidget()
         self.sourcePanelLayout = widgets.QVBoxLayout()
@@ -383,7 +368,6 @@ class MainWindow(widgets.QMainWindow):
         self.sourceScroll.setLayout(self.sourceScrollLayout)
         self.sourcePanelLayout.addWidget(self.sourceScroll)
         self.sourcePanel.setLayout(self.sourcePanelLayout)
-        self.sourceDock.setWidget(self.sourcePanel)
 
         # Setup of inner item panel.
 
@@ -431,16 +415,36 @@ class MainWindow(widgets.QMainWindow):
         headersLayout.addSpacerItem(widgets.QSpacerItem(30,1))
         headers.setLayout(headersLayout)
 
-        container = widgets.QWidget()
-        containerLayout = widgets.QVBoxLayout()
-        self.title_bar = CustomTitleBar(self)
-        containerLayout.addWidget(self.title_bar)
-        containerLayout.addWidget(self.searchbar)
-        containerLayout.addWidget(headers)
-        containerLayout.addWidget(self.scroller)
+        self.menu = widgets.QMenuBar()
+        file_menu = self.menu.addMenu("&File")
+        file_menu.addAction(button_action)
+        file_menu.addAction(button_action2)
+        file_menu.addSeparator()
 
-        container.setLayout(containerLayout)
-        self.setCentralWidget(container)
+        itemContainer = widgets.QWidget()
+        itemContainerLayout = widgets.QVBoxLayout()
+        itemContainerLayout.addWidget(self.searchbar)
+        itemContainerLayout.addWidget(headers)
+        itemContainerLayout.addWidget(self.scroller)
+        itemContainer.setLayout(itemContainerLayout)
+
+        lowerContainer = widgets.QWidget()
+        lowerContainerLayout = widgets.QHBoxLayout()
+        self.addingMenu.setFixedWidth(200)
+        self.sourcePanel.setFixedWidth(200)
+        lowerContainerLayout.addWidget(self.addingMenu)
+        lowerContainerLayout.addWidget(itemContainer)
+        lowerContainerLayout.addWidget(self.sourcePanel)
+        lowerContainer.setLayout(lowerContainerLayout)
+
+        overallContainer = widgets.QWidget()
+        overallLayout = widgets.QVBoxLayout()
+        overallLayout.addWidget(self.title_bar)
+        overallLayout.addWidget(self.menu)
+        overallLayout.addWidget(lowerContainer)
+        overallContainer.setLayout(overallLayout)
+
+        self.setCentralWidget(overallContainer)
 
         self.show()
 
