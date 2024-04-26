@@ -545,7 +545,7 @@ class MainWindow(widgets.QMainWindow):
         sale_amount = self.calculate_sales_price(sales)
         self.increase_profit(sale_amount)
         self.update_lifetime_stats(sales_stat_info)
-        self.update_daily_stats(sales_stat_info)
+        self.update_daily_stats(sales_stat_info, sale_amount)
 
     def increase_profit(self, amount):
         self.total_profit += amount
@@ -622,12 +622,13 @@ class MainWindow(widgets.QMainWindow):
                 f.write(item_tags[ind] + ' #' + lifetime_sales[ind] + '\n')
         return
     
-    def update_daily_stats(self, sales):
+    def update_daily_stats(self, sales, amount):
         log_name = './logs/daily-log-' + str(datetime.now().date())
         with open(log_name, 'a+') as f:
             sale_time = str(datetime.now().time()).split('.')[0]
+            f.write('$SALE: ' + str(amount) + ' ' + str(sale_time) + ' ' + str(len(sales)) + ' ITEMS \n')
             for sale in sales:
-                f.write(sale['item'] + ';' + sale['category'] + ';' + f'{sale['price']:.2f}' + ';' + sale_time + '\n')
+                f.write(sale['item'] + ';' + sale['category'] + '\n')
         return
     
     def changeEvent(self, event):
