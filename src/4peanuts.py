@@ -512,7 +512,7 @@ class MainWindow(widgets.QMainWindow):
                     for i in range(times):
                         cat_lists[cat].pop(0)
                 elif deal[0] == 'BULK':
-                    times = (num_bought // (deal[1]+deal[2]))
+                    times = num_bought // deal[1]
                     for i in range(times):
                         for j in range(deal[1]):
                             cat_lists[cat].pop(0)
