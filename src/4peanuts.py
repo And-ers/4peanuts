@@ -5,6 +5,7 @@ from PyQt6.QtCore import Qt, QSize, QObject, QEvent
 from qt_material import apply_stylesheet
 import os
 from datetime import datetime
+from ast import literal_eval
 
 # .png ICONS FROM FUGUE ICONS BY YUSUKE KAMIYAMANE AT https://p.yusukekamiyamane.com/
 # .svg ICONS FROM PYTHONGUIS.COM AT https://www.pythonguis.com/tutorials/custom-title-bar-pyqt6/
@@ -121,15 +122,17 @@ class invItemWidget(widgets.QWidget):
     def __str__(self):
         return ','.join([self.product_name, self.product_category, self. product_source, str(self.price), str(self.inv_count)])
 
-class CustomDialog(widgets.QDialog):
+class DealsDialog(widgets.QDialog):
     def __init__(self, parent = None):
         super().__init__(parent)
 
         self.setWindowTitle("Configure deals...")
+        self.resize(600,400)
 
         self.control_boxes = []
 
-        self.overallLayout = widgets.QVBoxLayout()
+        self.nonlabelContainer = widgets.QWidget()
+        self.nonlabelLayout = widgets.QVBoxLayout()
         self.inputContainer = widgets.QWidget()
         self.inputLayout = widgets.QHBoxLayout()
         self.catDropBox = widgets.QComboBox()
@@ -145,33 +148,36 @@ class CustomDialog(widgets.QDialog):
         self.BOGOControls = widgets.QHBoxLayout()
         self.BOGOLabel1 = widgets.QLabel('Buy ')
         self.BOGOField1 = widgets.QSpinBox()
-        self.BOGOField1.setFixedWidth(30)
+        self.BOGOField1.setFixedWidth(60)
         self.BOGOField1.setButtonSymbols(widgets.QAbstractSpinBox.ButtonSymbols.NoButtons)
         self.BOGOLabel2 = widgets.QLabel(', get ')
         self.BOGOField2 = widgets.QSpinBox()
-        self.BOGOField2.setFixedWidth(30)
+        self.BOGOField2.setFixedWidth(60)
         self.BOGOField2.setButtonSymbols(widgets.QAbstractSpinBox.ButtonSymbols.NoButtons)
         self.BOGOControls.addWidget(self.BOGOLabel1)
         self.BOGOControls.addWidget(self.BOGOField1)
         self.BOGOControls.addWidget(self.BOGOLabel2)
         self.BOGOControls.addWidget(self.BOGOField2)
         self.BOGOContainer.setLayout(self.BOGOControls)
+        self.control_boxes.append(self.BOGOContainer)
 
         self.BULKContainer = widgets.QWidget()
         self.BULKControls = widgets.QHBoxLayout()
         self.BULKLabel1 = widgets.QLabel('Buy ')
         self.BULKField1 = widgets.QSpinBox()
-        self.BULKField1.setFixedWidth(30)
+        self.BULKField1.setFixedWidth(60)
         self.BULKField1.setButtonSymbols(widgets.QAbstractSpinBox.ButtonSymbols.NoButtons)
         self.BULKLabel2 = widgets.QLabel(' for $')
-        self.BULKField2 = widgets.QSpinBox()
-        self.BULKField2.setFixedWidth(30)
+        self.BULKField2 = widgets.QDoubleSpinBox()
+        self.BULKField2.setDecimals(2)
+        self.BULKField2.setFixedWidth(60)
         self.BULKField2.setButtonSymbols(widgets.QAbstractSpinBox.ButtonSymbols.NoButtons)
         self.BULKControls.addWidget(self.BULKLabel1)
         self.BULKControls.addWidget(self.BULKField1)
         self.BULKControls.addWidget(self.BULKLabel2)
         self.BULKControls.addWidget(self.BULKField2)
         self.BULKContainer.setLayout(self.BULKControls)
+        self.control_boxes.append(self.BULKContainer)
 
         buttons = widgets.QDialogButtonBox.StandardButton.Save | widgets.QDialogButtonBox.StandardButton.Cancel
 
@@ -188,8 +194,25 @@ class CustomDialog(widgets.QDialog):
         self.BOGOContainer.setVisible(False)
         self.BULKContainer.setVisible(False)
         self.inputContainer.setLayout(self.inputLayout)
-        self.overallLayout.addWidget(self.inputContainer)
-        self.overallLayout.addWidget(self.buttonBox)
+        self.inputContainer.setFixedHeight(100)
+        self.nonlabelLayout.addWidget(self.inputContainer)
+        self.nonlabelLayout.addWidget(self.buttonBox)
+        self.nonlabelContainer.setLayout(self.nonlabelLayout)
+
+        self.dealLabels = widgets.QScrollArea()
+        self.dealLabels.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
+        self.dealLabels.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
+        self.dealLabels.setWidgetResizable(True)
+        self.dealLabelsLayout = widgets.QVBoxLayout()
+        for category in invItemWidget.categories:
+            if invItemWidget.deals[category] is not None:
+                self.dealLabelsLayout.addWidget(self.create_deal_entry(category))
+        self.dealLabels.setLayout(self.dealLabelsLayout)
+        self.dealLabelsLayout.addSpacerItem(widgets.QSpacerItem(1,1,widgets.QSizePolicy.Policy.Minimum, widgets.QSizePolicy.Policy.Expanding))
+
+        self.overallLayout = widgets.QVBoxLayout()
+        self.overallLayout.addWidget(self.nonlabelContainer)
+        self.overallLayout.addWidget(self.dealLabels)
         self.setLayout(self.overallLayout)
 
     def show_deal_controls(self):
@@ -216,6 +239,28 @@ class CustomDialog(widgets.QDialog):
             invItemWidget.deals.update({category : ('BULK', self.BULKField1.value(), self.BULKField2.value())})
         self.accept()
 
+    def create_deal_entry(self, category):
+        cat_label = widgets.QLabel(category)
+        deal = invItemWidget.deals[category]
+        print(deal)
+        deal_type = deal[0]
+        print(deal_type)
+        deal_string = ''
+        if deal_type == 'BOGO':
+            deal_string = 'Buy ' + str(deal[1]) + ' get ' + str(deal[2]) + ' free'
+        if deal_type == 'BULK':
+            deal_string = 'Get ' + str(deal[1]) + ' for $' + str(deal[2])
+        print(deal_string)
+        deal_label = widgets.QLabel(deal_string)
+        deal_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+        dealEntry = widgets.QWidget()
+        dealEntryLayout = widgets.QHBoxLayout()
+        dealEntryLayout.addWidget(cat_label)
+        dealEntryLayout.addWidget(deal_label)
+        dealEntry.setLayout(dealEntryLayout)
+        return dealEntry
+        
+
 class CustomTitleBar(widgets.QWidget):
     def __init__(self, parent):
         super().__init__(parent)
@@ -231,7 +276,7 @@ class CustomTitleBar(widgets.QWidget):
         self.title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.title.setStyleSheet(
             """
-        QLabel { text-transform: uppercase; font-size: 12pt; margin-left: 48px; }
+        QLabel { font-size: 12pt; margin-left: 48px; }
         """
         )
 
@@ -299,10 +344,10 @@ class MainWindow(widgets.QMainWindow):
         super().__init__(*args, **kwargs)
         self.initial_pos = None
 
-        self.setWindowTitle('PyQt Inventory Management System')
+        self.setWindowTitle('4Peanuts Inventory Management')
         self.resize(1280, 800)
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
-        self.setStyleSheet("QLineEdit, QComboBox, QSpinBox { color: white }")
+        self.setStyleSheet("QLineEdit, QComboBox, QSpinBox, QDoubleSpinBox { color: white }")
 
         self.title_bar = CustomTitleBar(self)
 
@@ -552,18 +597,18 @@ class MainWindow(widgets.QMainWindow):
         self.profitLabel.setText(f"Today's Profit: ${self.total_profit:.2f}")
 
     def open_deal_dialog(self):
-        dlg = CustomDialog(self)
+        dlg = DealsDialog(self)
         dlg.exec()
     
     def save_to_file(self):
-        filename, ok = widgets.QFileDialog.getSaveFileName(self,"Save File","","4Peanuts (*.fpn)")
+        filename, ok = widgets.QFileDialog.getSaveFileName(self,"Save File",".\\saves\\","4Peanuts (*.fpn)")
         with open(filename, 'w+') as f:
             f.write('$ CATEGORIES\n')
             f.writelines([cat + '\n' for cat in invItemWidget.categories if cat != '-'])
             f.write('$ SOURCES\n')
             f.writelines([src + '\n' for src in invItemWidget.sources if src != '-'])
             f.write('$ DEALS\n')
-            f.writelines([deal + ':' + invItemWidget.deals[deal] + '\n' for deal in invItemWidget.deals.keys() if invItemWidget.deals[deal] is not None])
+            f.writelines([str(category) + ':' + str(invItemWidget.deals[category]) + '\n' for category in invItemWidget.deals.keys() if invItemWidget.deals[category] is not None])
             f.write('$ ITEMS\n')
             f.writelines([str(item) + '\n' for item in self.items])
             
@@ -589,6 +634,7 @@ class MainWindow(widgets.QMainWindow):
                 nextline = f.readline().strip('\n')
                 while nextline[0] != '$':
                     cat, deal = nextline.split(':')
+                    deal = literal_eval(deal)
                     invItemWidget.deals.update({cat: deal})
                     nextline = f.readline().strip('\n')
                 nextline = f.readline().strip('\n')

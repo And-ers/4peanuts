@@ -6,6 +6,8 @@ $ SOURCES
 Overflow Binder
 Standard
 $ DEALS
+Print:('BOGO', 2, 1)
+Sticker:('BULK', 4, 2.0)
 $ ITEMS
 Mario,Sticker,Standard,0.75,20
 Luigi,Sticker,Standard,0.75,32
