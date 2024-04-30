@@ -7,6 +7,13 @@ import os
 from datetime import datetime
 from ast import literal_eval
 
+import numpy as np
+
+from matplotlib.backends.backend_qtagg import FigureCanvas
+from matplotlib.backends.backend_qtagg import NavigationToolbar2QT as NavigationToolbar
+from matplotlib.backends.qt_compat import QtWidgets
+from matplotlib.figure import Figure
+
 # .png ICONS FROM FUGUE ICONS BY YUSUKE KAMIYAMANE AT https://p.yusukekamiyamane.com/
 # .svg ICONS FROM PYTHONGUIS.COM AT https://www.pythonguis.com/tutorials/custom-title-bar-pyqt6/
 
@@ -371,6 +378,66 @@ class CustomTitleBar(widgets.QWidget):
             self.normal_button.setVisible(False)
             self.max_button.setVisible(True)
 
+class DataDialog(widgets.QDialog):
+    def __init__(self, parent = None):
+        super().__init__(parent)
+
+        self.setWindowTitle("Chart Sales Data")
+        self.resize(1200,500)
+
+        # Get data
+
+        # Overall window layout
+
+        data_window_layout = widgets.QVBoxLayout()
+
+        # Label for date
+
+        self.data_date_label = widgets.QLabel("Select a log file to chart.")
+        self.data_date_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        data_window_layout.addWidget(self.data_date_label)
+
+        # Charts
+
+        customers_over_time = FigureCanvas(Figure(figsize=(5, 5)))
+        items_over_time = FigureCanvas(Figure(figsize=(5,5)))
+        profit_over_time = FigureCanvas(Figure(figsize=(5, 5)))
+        num_items_sold = FigureCanvas(Figure(figsize=(5, 5)))
+
+        # Chart layout
+
+        chart_container = widgets.QWidget()
+        chart_container_layout = widgets.QGridLayout()
+        chart_container_layout.addWidget(customers_over_time, 0, 0)
+        chart_container_layout.addWidget(items_over_time, 0, 1)
+        chart_container_layout.addWidget(profit_over_time, 1, 0)
+        chart_container_layout.addWidget(num_items_sold, 1, 1)
+        chart_container.setLayout(chart_container_layout)
+        data_window_layout.addWidget(chart_container)
+
+        # Button to open data from file
+
+        open_data_button = widgets.QPushButton("Open Data Log")
+        open_data_button.clicked.connect(self.read_file_data)
+        data_window_layout.addWidget(open_data_button)
+
+        # Set overall window layout
+
+        self.setLayout(data_window_layout)
+
+    def read_file_data(self):
+        filename, ok = widgets.QFileDialog.getOpenFileName(
+            self,
+            "Select a File", 
+            ".\\logs\\", 
+            "Text File (*.txt)"
+        )
+        if filename:
+            self.data_date_label.setText("Sales data for " + filename[-14:-4])
+            with open(filename, 'r') as f:
+                data_points = f.readlines()
+                sales = [datum for datum in data_points if datum[0] == '$']
+
 class MainWindow(widgets.QMainWindow):
 
     def __init__(self, *args, **kwargs):
@@ -378,7 +445,7 @@ class MainWindow(widgets.QMainWindow):
         self.initial_pos = None
 
         self.setWindowTitle('4Peanuts Small Inventory Management')
-        self.resize(1280, 800)
+        self.resize(900, 600)
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
         self.setStyleSheet("QLineEdit, QComboBox, QSpinBox, QDoubleSpinBox { color: white }")
 
@@ -514,8 +581,16 @@ class MainWindow(widgets.QMainWindow):
 
         # Data menu toolbar
 
+        chart_data_action = QAction(QIcon("icons/chart.png"), "&Chart Data", self)
+        chart_data_action.setStatusTip("Create charts from daily logs")
+        chart_data_action.triggered.connect(self.open_data_dialog)
+        chart_data_action.setCheckable(True)
+
         data_menu = self.menu.addMenu("&Data")
-        data_menu.addAction
+        data_menu.addAction(chart_data_action)
+        data_menu.addSeparator()
+
+        # Container for main app
 
         itemContainer = widgets.QWidget()
         itemContainerLayout = widgets.QVBoxLayout()
@@ -711,7 +786,7 @@ class MainWindow(widgets.QMainWindow):
         return
     
     def update_daily_stats(self, sales, amount):
-        log_name = './logs/daily-log-' + str(datetime.now().date())
+        log_name = './logs/daily-log-' + str(datetime.now().date()) + '.txt'
         with open(log_name, 'a+') as f:
             sale_time = str(datetime.now().time()).split('.')[0]
             f.write('$SALE: ' + str(amount) + ' ' + str(sale_time) + ' ' + str(len(sales)) + ' ITEMS \n')
@@ -749,6 +824,10 @@ class MainWindow(widgets.QMainWindow):
         self.initial_pos = None
         super().mouseReleaseEvent(event)
         event.accept()
+
+    def open_data_dialog(self):
+        dlg = DataDialog(self)
+        dlg.exec()
         
 if __name__ == '__main__':
     app = widgets.QApplication(sys.argv)

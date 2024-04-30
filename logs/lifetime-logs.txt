@@ -1,0 +1,7 @@
+[Creaturette] Roxie #3
+[Creature] Chewie #6
+[Creature] Laddie #6
+[Sticker] Mario #4
+[Pin] Kirby #6
+[Sticker] Luigi #3
+[Print] Sonic #6
