@@ -383,7 +383,7 @@ class DataDialog(widgets.QDialog):
         super().__init__(parent)
 
         self.setWindowTitle("Chart Sales Data")
-        self.resize(1200,500)
+        self.resize(900,600)
 
         # Get data
 
@@ -445,7 +445,7 @@ class MainWindow(widgets.QMainWindow):
         self.initial_pos = None
 
         self.setWindowTitle('4Peanuts Small Inventory Management')
-        self.resize(900, 600)
+        self.resize(1280, 800)
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
         self.setStyleSheet("QLineEdit, QComboBox, QSpinBox, QDoubleSpinBox { color: white }")
 
