@@ -10,10 +10,27 @@ from ast import literal_eval
 # .png ICONS FROM FUGUE ICONS BY YUSUKE KAMIYAMANE AT https://p.yusukekamiyamane.com/
 # .svg ICONS FROM PYTHONGUIS.COM AT https://www.pythonguis.com/tutorials/custom-title-bar-pyqt6/
 
+#################################################
+# Width constants to describe the size of the
+# inner labels and boxes for each item.
+
 CATEGORY_WIDTH = 150
 PRICE_WIDTH = 80
 AMOUNT_WIDTH = 80
 SELL_COUNT_WIDTH = 80
+
+#################################################
+#
+#   class invItemWidget:
+#   
+#   Class that represents an item object.
+#   Item categories, sources, and deals for
+#   each category are stored as class variables.
+#   
+#   Each invItemWidget has the name, category,
+#   source, price, and count of the item it
+#   represents, and displays them all within
+#   the main scroll area.
 
 class invItemWidget(widgets.QWidget):
 
@@ -23,16 +40,22 @@ class invItemWidget(widgets.QWidget):
         '-' : None
         }
 
+    # Add a new category to the class
+
     @classmethod
     def add_category(self, name):
         invItemWidget.categories.append(name)
         invItemWidget.categories.sort()
         invItemWidget.deals.update({name : None})
 
+    # Add a new inventory source to the class
+
     @classmethod
     def add_source(self, name):
         invItemWidget.sources.append(name)
         invItemWidget.sources.sort()
+
+    # Initializer to create a new invItemWidget
 
     def __init__(self, name = 'New Product', category = '-', source = '-', price = 0.0, count = 0, parent_window = None):
         super(invItemWidget, self).__init__()
@@ -42,36 +65,57 @@ class invItemWidget(widgets.QWidget):
         self.price = price
         self.inv_count = count
         self.parent_window = parent_window
+        
+        ### CREATION OF REPRESENTATIVE LABELS AND FIELDS
+
+        # Field (LineEdit) that contains the name of the product
 
         self.name_box = widgets.QLineEdit(self.product_name)
+
+        # Field (ComboBox) that contains the category the product falls under
+
         self.category_box = widgets.QComboBox()
         self.category_box.addItems(invItemWidget.categories)
         self.category_box.setFixedWidth(CATEGORY_WIDTH)
         self.category_box.setInsertPolicy(widgets.QComboBox.InsertPolicy.InsertAlphabetically)
         self.category_box.setCurrentIndex([self.category_box.itemText(i) for i in range(self.category_box.count())].index(self.product_category))
+
+        # Field (ComboBox) that contains the source where the item originates
+
         self.source_box = widgets.QComboBox()
         self.source_box.addItems(invItemWidget.sources)
         self.source_box.setFixedWidth(CATEGORY_WIDTH)
         self.source_box.setInsertPolicy(widgets.QComboBox.InsertPolicy.InsertAlphabetically)
         self.source_box.setCurrentIndex([self.source_box.itemText(i) for i in range(self.source_box.count())].index(self.product_source))
+        
+        # Field (LineEdit) that contains the price of the item
+        
         self.price_box = widgets.QLineEdit(str(self.price))
         self.price_box.setFixedWidth(PRICE_WIDTH)
+
+        # Field (SpinBox) that contains the stock count of the item
+
         self.amountBox = widgets.QSpinBox()
         self.amountBox.setButtonSymbols(widgets.QAbstractSpinBox.ButtonSymbols.NoButtons)
         self.amountBox.setRange(0,999)
         self.amountBox.setFixedWidth(AMOUNT_WIDTH)
         self.amountBox.setValue(self.inv_count)
+
+        # Field (SpinBox) that contains the amount of the item to sell
+
         self.sellCountBox = widgets.QSpinBox()
         self.sellCountBox.setButtonSymbols(widgets.QAbstractSpinBox.ButtonSymbols.PlusMinus)
         self.sellCountBox.setRange(0,self.inv_count)
         self.sellCountBox.setFixedWidth(SELL_COUNT_WIDTH)
-        self.sellCountBox.valueChanged.connect(parent_window.display_sell_price)
+
+        # Connect all of the above fields to the functions that update the inventory
 
         self.category_box.currentTextChanged.connect(self.updateCategory)
         self.source_box.currentTextChanged.connect(self.updateSource)
         self.amountBox.editingFinished.connect(self.updateAmount)
         self.name_box.editingFinished.connect(self.setName)
         self.price_box.editingFinished.connect(self.setPrice)
+        self.sellCountBox.valueChanged.connect(parent_window.display_sell_price)
 
         self.hbox = widgets.QHBoxLayout()
         self.hbox.addWidget(self.name_box)
@@ -88,14 +132,6 @@ class invItemWidget(widgets.QWidget):
     
     def setPrice(self):
         self.price = float(self.price_box.text())
-
-    def show(self):
-        for w in [self, self.name_box, self.category_box, self.price_box, self.sellCountBox]:
-            w.setVisible(True)
-
-    def hide(self):
-        for w in [self, self.name_box, self.category_box, self.price_box, self.sellCountBox]:
-            w.setVisible(False)
     
     def updateAmount(self):
         self.inv_count = self.amountBox.value()
@@ -201,7 +237,7 @@ class DealsDialog(widgets.QDialog):
 
         self.dealLabels = widgets.QScrollArea()
         self.dealLabels.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
-        self.dealLabels.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
+        self.dealLabels.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.dealLabels.setWidgetResizable(True)
         self.dealLabelsLayout = widgets.QVBoxLayout()
         for category in invItemWidget.categories:
@@ -211,8 +247,8 @@ class DealsDialog(widgets.QDialog):
         self.dealLabelsLayout.addSpacerItem(widgets.QSpacerItem(1,1,widgets.QSizePolicy.Policy.Minimum, widgets.QSizePolicy.Policy.Expanding))
 
         self.overallLayout = widgets.QVBoxLayout()
-        self.overallLayout.addWidget(self.nonlabelContainer)
         self.overallLayout.addWidget(self.dealLabels)
+        self.overallLayout.addWidget(self.nonlabelContainer)
         self.setLayout(self.overallLayout)
 
     def show_deal_controls(self):
@@ -242,15 +278,12 @@ class DealsDialog(widgets.QDialog):
     def create_deal_entry(self, category):
         cat_label = widgets.QLabel(category)
         deal = invItemWidget.deals[category]
-        print(deal)
         deal_type = deal[0]
-        print(deal_type)
         deal_string = ''
         if deal_type == 'BOGO':
             deal_string = 'Buy ' + str(deal[1]) + ' get ' + str(deal[2]) + ' free'
         if deal_type == 'BULK':
             deal_string = 'Get ' + str(deal[1]) + ' for $' + str(deal[2])
-        print(deal_string)
         deal_label = widgets.QLabel(deal_string)
         deal_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
         dealEntry = widgets.QWidget()
@@ -344,7 +377,7 @@ class MainWindow(widgets.QMainWindow):
         super().__init__(*args, **kwargs)
         self.initial_pos = None
 
-        self.setWindowTitle('4Peanuts Inventory Management')
+        self.setWindowTitle('4Peanuts Small Inventory Management')
         self.resize(1280, 800)
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
         self.setStyleSheet("QLineEdit, QComboBox, QSpinBox, QDoubleSpinBox { color: white }")
@@ -354,20 +387,6 @@ class MainWindow(widgets.QMainWindow):
         self.sources = {'-': None}
         self.items = []
         self.total_profit = 0.0
-
-        # File menu toolbar.
-
-        button_action = QAction(QIcon("icons/disk.png"), "&Save...", self)
-        button_action.setStatusTip("Save inventory to .txt file")
-        button_action.triggered.connect(self.save_to_file)
-        button_action.setCheckable(True)
-
-        button_action2 = QAction(QIcon("icons/folder-open.png"), "&Open...", self)
-        button_action2.setStatusTip("Open items from .txt file")
-        button_action2.triggered.connect(self.open_from_file)
-        button_action2.setCheckable(True)
-
-        self.setStatusBar(widgets.QStatusBar(self))
 
         # Dock for adding and configuring items and deals.
 
@@ -379,8 +398,6 @@ class MainWindow(widgets.QMainWindow):
         self.addCategoryBox = widgets.QLineEdit(self, placeholderText = 'Add new category...')
         self.addCategoryButton = widgets.QPushButton('Add')
         self.addCategoryButton.clicked.connect(self.add_new_category)
-        self.configureDealsButton = widgets.QPushButton('Configure deals...')
-        self.configureDealsButton.clicked.connect(self.open_deal_dialog)
 
         self.addingMenuLayout.addWidget(self.addItemButton)
         self.addingMenuLayout.addWidget(self.addCategoryBox)
@@ -395,7 +412,6 @@ class MainWindow(widgets.QMainWindow):
         self.addingMenuLayout.addWidget(self.sellPriceLabel)
         self.addingMenuLayout.addWidget(self.profitLabel)
         self.addingMenuLayout.addWidget(self.sellButton)
-        self.addingMenuLayout.addWidget(self.configureDealsButton)
 
         self.addingMenu.setLayout(self.addingMenuLayout)
 
@@ -465,11 +481,41 @@ class MainWindow(widgets.QMainWindow):
         headersLayout.addSpacerItem(widgets.QSpacerItem(30,1))
         headers.setLayout(headersLayout)
 
+        # File menu toolbar
+
+        button_action = QAction(QIcon("icons/disk.png"), "&Save...", self)
+        button_action.setStatusTip("Save inventory to .txt file")
+        button_action.triggered.connect(self.save_to_file)
+        button_action.setCheckable(True)
+
+        button_action2 = QAction(QIcon("icons/folder-open.png"), "&Open...", self)
+        button_action2.setStatusTip("Open items from .txt file")
+        button_action2.triggered.connect(self.open_from_file)
+        button_action2.setCheckable(True)
+
+        self.setStatusBar(widgets.QStatusBar(self))
+
         self.menu = widgets.QMenuBar()
         file_menu = self.menu.addMenu("&File")
         file_menu.addAction(button_action)
         file_menu.addAction(button_action2)
         file_menu.addSeparator()
+
+        # Settings menu toolbar
+
+        deals_action = QAction(QIcon("icons/smiley-money.png"), "&Configure Deals...", self)
+        deals_action.setStatusTip("View and add deals")
+        deals_action.triggered.connect(self.open_deal_dialog)
+        deals_action.setCheckable(True)
+
+        settings_menu = self.menu.addMenu("&Settings")
+        settings_menu.addAction(deals_action)
+        settings_menu.addSeparator()
+
+        # Data menu toolbar
+
+        data_menu = self.menu.addMenu("&Data")
+        data_menu.addAction
 
         itemContainer = widgets.QWidget()
         itemContainerLayout = widgets.QVBoxLayout()
@@ -496,16 +542,16 @@ class MainWindow(widgets.QMainWindow):
 
         self.setCentralWidget(overallContainer)
 
-        self.show()
+        self.setVisible(True)
 
     def update_display(self):
         for item in self.items:
-            item.hide()
+            item.setVisible(False)
             if self.searchbar.text().lower() in item.product_name.lower() and item.product_source == '-':
-                item.show()
+                item.setVisible(True)
             if self.searchbar.text().lower() in item.product_name.lower() and self.sources[item.product_source] is not None:
                     if self.sources[item.product_source].isChecked():
-                        item.show()
+                        item.setVisible(True)
 
     def add_item(self, pad = None, name = 'New Product', category = '-', source = '-', price = 0.0, count = 0, parent_window = None):
         new_item = invItemWidget(name = name, category = category, source = source, price = price, count = count, parent_window = self)
@@ -652,8 +698,6 @@ class MainWindow(widgets.QMainWindow):
                 item_tags, lifetime_sales = [], []
             else:
                 item_tags, lifetime_sales = [line.split('#')[0].strip() for line in data_lines], [line.split('#')[1].strip() for line in data_lines]
-                print(item_tags)
-                print(lifetime_sales)
             for sale in sales:
                 item_tag = '[' + sale['category'] + '] ' + sale['item']
                 if item_tag in item_tags:
@@ -661,8 +705,6 @@ class MainWindow(widgets.QMainWindow):
                 else:
                     item_tags.append(item_tag)
                     lifetime_sales.append('1')
-            print(item_tags)
-            print(lifetime_sales)
         with open('./logs/lifetime-logs', 'w') as f:
             for ind in range(len(item_tags)):
                 f.write(item_tags[ind] + ' #' + lifetime_sales[ind] + '\n')
