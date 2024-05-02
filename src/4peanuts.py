@@ -7,9 +7,11 @@ import os
 from datetime import datetime
 from ast import literal_eval
 
+import pandas as pd
+import matplotlib.pyplot as plt
 import numpy as np
 
-from matplotlib.backends.backend_qtagg import FigureCanvas
+from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qtagg import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.backends.qt_compat import QtWidgets
 from matplotlib.figure import Figure
@@ -25,6 +27,15 @@ CATEGORY_WIDTH = 150
 PRICE_WIDTH = 80
 AMOUNT_WIDTH = 80
 SELL_COUNT_WIDTH = 80
+
+import matplotlib.dates as mdates
+from matplotlib.ticker import MaxNLocator
+halfHourFmt = mdates.DateFormatter('%H:%M')
+halfHourLoc = mdates.MinuteLocator([0,30])
+
+
+import seaborn as sns
+sns.set_theme()
 
 #################################################
 #
@@ -399,25 +410,26 @@ class DataDialog(widgets.QDialog):
 
         # Charts
 
-        customers_over_time = FigureCanvas(Figure(figsize=(5, 5)))
-        items_over_time = FigureCanvas(Figure(figsize=(5,5)))
-        profit_over_time = FigureCanvas(Figure(figsize=(5, 5)))
-        num_items_sold = FigureCanvas(Figure(figsize=(5, 5)))
+        self.customers_over_time = FigureCanvas(Figure(figsize=(3, 3), dpi=80, tight_layout = True))
+        self.items_over_time = FigureCanvas(Figure(figsize=(3,3)))
+        self.profit_over_time = FigureCanvas(Figure(figsize=(3, 3)))
+        self.num_items_sold = FigureCanvas(Figure(figsize=(3, 3)))
 
         # Chart layout
 
         chart_container = widgets.QWidget()
         chart_container_layout = widgets.QGridLayout()
-        chart_container_layout.addWidget(customers_over_time, 0, 0)
-        chart_container_layout.addWidget(items_over_time, 0, 1)
-        chart_container_layout.addWidget(profit_over_time, 1, 0)
-        chart_container_layout.addWidget(num_items_sold, 1, 1)
+        chart_container_layout.addWidget(self.customers_over_time, 0, 0)
+        chart_container_layout.addWidget(self.items_over_time, 0, 1)
+        chart_container_layout.addWidget(self.profit_over_time, 1, 0)
+        chart_container_layout.addWidget(self.num_items_sold, 1, 1)
         chart_container.setLayout(chart_container_layout)
         data_window_layout.addWidget(chart_container)
 
         # Button to open data from file
 
         open_data_button = widgets.QPushButton("Open Data Log")
+        open_data_button.setFixedWidth(200)
         open_data_button.clicked.connect(self.read_file_data)
         data_window_layout.addWidget(open_data_button)
 
@@ -436,6 +448,39 @@ class DataDialog(widgets.QDialog):
             self.data_date_label.setText("Sales data for " + filename[-14:-4])
             with open(filename, 'r') as f:
                 data_points = f.readlines()
+                cot_points = dict()
+                iot_points = []
+                pot_points = []
+                itemsold_points = []
+                for datum in data_points:
+                    if datum[0] == '$':
+                        profit, time, items = datum.split(' ')[1:4]
+
+                        # Data for customers over time
+
+                        if int(time[3:5]) >= 30:
+                            min = '30'
+                        else:
+                            min = '00'
+                        cot_time_str = time[0:2] + ':' + min
+                        if cot_time_str in cot_points.keys():
+                            cot_points.update({ cot_time_str : cot_points[cot_time_str]+1 })
+                        else:
+                            cot_points.update({ cot_time_str : 1 })
+
+                # Plot customers over time
+
+                cot_axes = self.customers_over_time.figure.add_subplot()
+                rounded_times = [(datetime.strptime(time_str, '%H:%M')) for time_str in cot_points.keys()]
+                cot_y = [cot_points[time_str] for time_str in cot_points.keys()]
+                cot_axes.xaxis.set_major_formatter(halfHourFmt)
+                cot_axes.xaxis.set_major_locator(halfHourLoc)
+                cot_axes.yaxis.set_major_locator(MaxNLocator(integer=True))
+                self.customers_over_time.figure.autofmt_xdate(rotation=70, ha='center')
+                cot_axes.bar(rounded_times, cot_y, width=0.02)
+                print(rounded_times)
+                self.customers_over_time.draw()
+                        
                 sales = [datum for datum in data_points if datum[0] == '$']
 
 class MainWindow(widgets.QMainWindow):
