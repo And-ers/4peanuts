@@ -23,5 +23,20 @@ $SALE: 3.0 13:45:00 5 ITEMS
 Kirby;Pin
 Kirby;Pin
 Kirby;Pin
-$SALE: 0.75 18:00:32 1 ITEMS 
+$SALE: 14.0 14:03:26 10 ITEMS 
+Mario;Sticker
+Luigi;Sticker
+Luigi;Sticker
+Luigi;Sticker
+Sonic;Print
+Sonic;Print
+Sonic;Print
+Sonic;Print
+Sonic;Print
+Sonic;Print
+$SALE: 2.5 14:29:59 3 ITEMS 
+Mario;Sticker
+Mario;Sticker
+Kirby;Pin
+$SALE: 0.75 15:00:32 1 ITEMS 
 Mario;Sticker

@@ -394,7 +394,7 @@ class DataDialog(widgets.QDialog):
         super().__init__(parent)
 
         self.setWindowTitle("Chart Sales Data")
-        self.resize(900,600)
+        self.resize(900,700)
 
         # Get data
 
@@ -405,15 +405,17 @@ class DataDialog(widgets.QDialog):
         # Label for date
 
         self.data_date_label = widgets.QLabel("Select a log file to chart.")
-        self.data_date_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.data_date_label.setStyleSheet("font-size: 20px; qproperty-alignment: AlignCenter; font-weight: bold")
+        #self.data_date_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.data_date_label.setFixedHeight(50)
         data_window_layout.addWidget(self.data_date_label)
 
         # Charts
 
         self.customers_over_time = FigureCanvas(Figure(figsize=(3, 3), dpi=80, tight_layout = True))
-        self.items_over_time = FigureCanvas(Figure(figsize=(3,3)))
-        self.profit_over_time = FigureCanvas(Figure(figsize=(3, 3)))
-        self.num_items_sold = FigureCanvas(Figure(figsize=(3, 3)))
+        self.items_over_time = FigureCanvas(Figure(figsize=(3,3), dpi=80, tight_layout = True))
+        self.profit_over_time = FigureCanvas(Figure(figsize=(3, 3), dpi=80, tight_layout = True))
+        self.num_items_sold = FigureCanvas(Figure(figsize=(3, 3), dpi=80, tight_layout = True))
 
         # Chart layout
 
@@ -431,7 +433,7 @@ class DataDialog(widgets.QDialog):
         open_data_button = widgets.QPushButton("Open Data Log")
         open_data_button.setFixedWidth(200)
         open_data_button.clicked.connect(self.read_file_data)
-        data_window_layout.addWidget(open_data_button)
+        data_window_layout.addWidget(open_data_button, alignment = Qt.AlignmentFlag.AlignRight)
 
         # Set overall window layout
 
@@ -449,39 +451,97 @@ class DataDialog(widgets.QDialog):
             with open(filename, 'r') as f:
                 data_points = f.readlines()
                 cot_points = dict()
-                iot_points = []
-                pot_points = []
-                itemsold_points = []
+                iot_points = dict()
+                total_profit = 0
+                pot_points = dict()
+                itemsold_points = dict()
                 for datum in data_points:
                     if datum[0] == '$':
                         profit, time, items = datum.split(' ')[1:4]
+                        profit, items = float(profit), int(items)
+                        total_profit += profit
 
-                        # Data for customers over time
+                        # Data for customers/items/profits over time
 
                         if int(time[3:5]) >= 30:
                             min = '30'
                         else:
                             min = '00'
-                        cot_time_str = time[0:2] + ':' + min
-                        if cot_time_str in cot_points.keys():
-                            cot_points.update({ cot_time_str : cot_points[cot_time_str]+1 })
+                        round_time_str = time[0:2] + ':' + min
+                        pot_points.update({ round_time_str : total_profit })
+                        if round_time_str in cot_points.keys():
+                            cot_points.update({ round_time_str : cot_points[round_time_str]+1 })
+                            iot_points.update({ round_time_str : iot_points[round_time_str]+items })
                         else:
-                            cot_points.update({ cot_time_str : 1 })
+                            cot_points.update({ round_time_str : 1 })
+                            iot_points.update({ round_time_str : items })
+                    else:
+                        item_name, item_cat = datum.replace('\n','').split(';')
+                        item_title = item_name + '\n(' + item_cat + ')'
+                        if item_title in itemsold_points.keys():
+                            itemsold_points.update({ item_title : itemsold_points[item_title]+1 })
+                        else:
+                            itemsold_points.update({ item_title : 1 })
+
+                rounded_times = [(datetime.strptime(time_str, '%H:%M')) for time_str in cot_points.keys()]
 
                 # Plot customers over time
-
+            
                 cot_axes = self.customers_over_time.figure.add_subplot()
-                rounded_times = [(datetime.strptime(time_str, '%H:%M')) for time_str in cot_points.keys()]
                 cot_y = [cot_points[time_str] for time_str in cot_points.keys()]
                 cot_axes.xaxis.set_major_formatter(halfHourFmt)
                 cot_axes.xaxis.set_major_locator(halfHourLoc)
                 cot_axes.yaxis.set_major_locator(MaxNLocator(integer=True))
                 self.customers_over_time.figure.autofmt_xdate(rotation=70, ha='center')
-                cot_axes.bar(rounded_times, cot_y, width=0.02)
-                print(rounded_times)
+                cot_axes.bar(rounded_times, cot_y, width=0.02, color='mediumturquoise')
+                cot_axes.set_title('Customers Over Time')
+                cot_axes.set_xlabel('Time', labelpad=15)
+                cot_axes.set_ylabel('No. Customers', labelpad=15)
                 self.customers_over_time.draw()
-                        
-                sales = [datum for datum in data_points if datum[0] == '$']
+
+                # Plot items sold over time
+
+                iot_axes = self.items_over_time.figure.add_subplot()
+                iot_y = [iot_points[time_str] for time_str in iot_points.keys()]
+                iot_axes.xaxis.set_major_formatter(halfHourFmt)
+                iot_axes.xaxis.set_major_locator(halfHourLoc)
+                iot_axes.yaxis.set_major_locator(MaxNLocator(integer=True))
+                self.items_over_time.figure.autofmt_xdate(rotation=70, ha='center')
+                iot_axes.bar(rounded_times, iot_y, width=0.02, color='mediumspringgreen')
+                iot_axes.set_title('Items Sold Over Time')
+                iot_axes.set_xlabel('Time', labelpad=15)
+                iot_axes.set_ylabel('No. Items Sold', labelpad=15)
+                self.items_over_time.draw()
+
+                # Plot profit over time
+
+                pot_axes = self.profit_over_time.figure.add_subplot()
+                pot_y = [pot_points[time_str] for time_str in pot_points.keys()]
+                pot_axes.xaxis.set_major_formatter(halfHourFmt)
+                pot_axes.xaxis.set_major_locator(halfHourLoc)
+                pot_axes.yaxis.set_major_formatter('${x:3.2f}')
+                pot_axes.yaxis.set_major_locator(MaxNLocator(integer=True))
+                self.profit_over_time.figure.autofmt_xdate(rotation=70, ha='center')
+                pot_axes.plot(rounded_times, pot_y, color='gold')
+                pot_axes.set_title('Cumulative Profit Over Time')
+                pot_axes.set_xlabel('Time', labelpad=15)
+                pot_axes.set_ylabel('Total Profit', labelpad=15)
+                self.profit_over_time.draw()
+
+                # Plot number of each item sold
+
+                itemsold_axes = self.num_items_sold.figure.add_subplot()
+                itemsold_x = list(itemsold_points.keys())
+                itemsold_y = [itemsold_points[key] for key in itemsold_x]
+                itemsold_axes.barh(itemsold_x, itemsold_y, color='salmon')
+                itemsold_axes.xaxis.set_major_locator(MaxNLocator(integer=True))
+                itemsold_axes.set_xticklabels(itemsold_axes.get_xticklabels(), ha='center')
+                itemsold_axes.set_yticklabels(itemsold_axes.get_yticklabels(), ha='center')
+                itemsold_axes.tick_params(axis='y', which='major', pad=20)
+                itemsold_axes.set_title('Sales by Item')
+                itemsold_axes.set_xlabel('No. Sold', labelpad=15)
+                itemsold_axes.set_ylabel('Item and Category', labelpad=15)
+                self.num_items_sold.draw()
 
 class MainWindow(widgets.QMainWindow):
 
